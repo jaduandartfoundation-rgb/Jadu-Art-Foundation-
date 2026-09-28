@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const AdminUser = require('./models/AdminUser');
 const Campaign = require('./models/Campaign');

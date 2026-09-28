@@ -5,8 +5,10 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 
+const path = require('path');
+
 // Load environment variables
-dotenv.config({ path: '../.env' });
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
 
