@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-green: #006B3C;
+  --color-brand-dark: #063F36;
+  --color-brand-orange: #F47B20;
+  --color-brand-gold: #C99020;
+  --color-brand-white: #FFFFFF;
+  --color-brand-cream: #FBF8F1;
+  --color-text-primary: #17201D;
+  --color-text-secondary: #5F6B66;
+  --color-border: #E4E9E5;
+
+  /* Backward Compatibility Mappings */
+  --color-primary-navy: #063F36;
+  --color-primary-saffron: #F47B20;
+  --color-primary-green: #006B3C;
+  --color-warm-off-white: #FBF8F1;
+  --color-dark-text: #17201D;
+  --color-light-border: #E4E9E5;
+
+  --font-sans: 'Inter', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Outfit', 'Inter', 'Noto Sans Devanagari', sans-serif;
+  --font-hindi: 'Noto Sans Devanagari', 'Inter', sans-serif;
+}
+
+:root {
+  --brand-green: #006B3C;
+  --brand-dark: #063F36;
+  --brand-orange: #F47B20;
+  --brand-gold: #C99020;
+  --brand-white: #FFFFFF;
+  --brand-cream: #FBF8F1;
+  --text-primary: #17201D;
+  --text-secondary: #5F6B66;
+  --border: #E4E9E5;
+}
+
+body {
+  background-color: var(--brand-cream);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+.hindi-text {
+  font-family: var(--font-hindi);
+}
+
+/* Custom Utilities & Badges */
+.bilingual-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background-color: rgba(244, 123, 32, 0.1);
+  color: #F47B20;
+  border: 1px solid rgba(244, 123, 32, 0.25);
+}
+
+.gold-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background-color: rgba(201, 144, 32, 0.12);
+  color: #C99020;
+  border: 1px solid rgba(201, 144, 32, 0.3);
+}
+
+.green-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background-color: rgba(0, 107, 60, 0.1);
+  color: #006B3C;
+  border: 1px solid rgba(0, 107, 60, 0.2);
+}
+
+.transition-all-custom {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Decorative Gold Line Motif */
+.gold-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #C99020, transparent);
+}

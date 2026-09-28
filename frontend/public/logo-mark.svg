@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" fill="none">
+  <defs>
+    <linearGradient id="markGreenGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#063F36" />
+      <stop offset="100%" stop-color="#006B3C" />
+    </linearGradient>
+    <linearGradient id="markOrangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F47B20" />
+      <stop offset="100%" stop-color="#E05D00" />
+    </linearGradient>
+    <linearGradient id="markGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E5AA30" />
+      <stop offset="100%" stop-color="#C99020" />
+    </linearGradient>
+    <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#063F36" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Outer Ring (Gold subtle accent) -->
+  <circle cx="50" cy="50" r="46" stroke="url(#markGoldGrad)" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.6" />
+  
+  <!-- Outer Shield/Circle (Deep Green) -->
+  <circle cx="50" cy="50" r="42" fill="url(#markGreenGrad)" filter="url(#subtleShadow)" />
+  <circle cx="50" cy="50" r="41" stroke="#C99020" stroke-width="1" fill="none" opacity="0.4" />
+
+  <!-- Inner Content: Leaves / Cradling Hands & Rising Flame/Sun -->
+  <!-- Central Sun (Gold) -->
+  <circle cx="50" cy="36" r="10" fill="url(#markGoldGrad)" />
+
+  <!-- Cradling Leaf 1 (Left - Saffron) -->
+  <path d="M 50 68 C 30 68 22 48 34 32 C 38 46 46 56 50 68 Z" fill="url(#markOrangeGrad)" />
+
+  <!-- Cradling Leaf 2 (Right - Gold/Green Accent) -->
+  <path d="M 50 68 C 70 68 78 48 66 32 C 62 46 54 56 50 68 Z" fill="url(#markOrangeGrad)" opacity="0.9" />
+
+  <!-- Center Sprout / Flame (Saffron & Gold) -->
+  <path d="M 50 64 C 44 50 45 36 50 24 C 55 36 56 50 50 64 Z" fill="url(#markGoldGrad)" />
+  
+  <!-- Lower Cradling Base (Dark Teal / Green Leaf Motif) -->
+  <path d="M 24 50 C 26 66 36 78 50 78 C 64 78 74 66 76 50 C 66 60 58 64 50 64 C 42 64 34 60 24 50 Z" fill="#006B3C" />
+  <path d="M 28 54 C 30 66 38 74 50 74 C 62 74 70 66 72 54 C 64 60 57 62 50 62 C 43 62 36 60 28 54 Z" fill="#063F36" />
+</svg>

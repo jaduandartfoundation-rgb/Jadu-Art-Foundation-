@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 90" width="380" height="90" fill="none">
+  <defs>
+    <linearGradient id="hzGreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#063F36" />
+      <stop offset="100%" stop-color="#006B3C" />
+    </linearGradient>
+    <linearGradient id="hzOrangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F47B20" />
+      <stop offset="100%" stop-color="#E05D00" />
+    </linearGradient>
+    <linearGradient id="hzGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E5AA30" />
+      <stop offset="100%" stop-color="#C99020" />
+    </linearGradient>
+  </defs>
+
+  <!-- Emblem Mark (Left) -->
+  <g transform="translate(5, 5)">
+    <circle cx="40" cy="40" r="38" fill="url(#hzGreenGrad)" />
+    <circle cx="40" cy="40" r="37" stroke="#C99020" stroke-width="1" fill="none" opacity="0.5" />
+    <circle cx="40" cy="27" r="9" fill="url(#hzGoldGrad)" />
+    <path d="M 40 56 C 24 56 18 40 27 26 C 30 38 37 46 40 56 Z" fill="url(#hzOrangeGrad)" />
+    <path d="M 40 56 C 56 56 62 40 53 26 C 50 38 43 46 40 56 Z" fill="url(#hzOrangeGrad)" opacity="0.9" />
+    <path d="M 40 52 C 35 40 36 29 40 19 C 44 29 45 40 40 52 Z" fill="url(#hzGoldGrad)" />
+    <path d="M 18 40 C 20 53 28 62 40 62 C 52 62 60 53 62 40 C 53 48 46 51 40 51 C 34 51 27 48 18 40 Z" fill="#006B3C" />
+  </g>
+
+  <!-- Divider line -->
+  <line x1="95" y1="12" x2="95" y2="78" stroke="#C99020" stroke-width="1.5" opacity="0.4" />
+
+  <!-- Typography -->
+  <!-- JADU AND ART -->
+  <text x="108" y="34" font-family="'Outfit', 'Inter', 'Cinzel', serif" font-weight="900" font-size="22" letter-spacing="1.2" fill="#063F36">
+    JADU AND ART
+  </text>
+  
+  <!-- FOUNDATION -->
+  <text x="108" y="54" font-family="'Inter', sans-serif" font-weight="800" font-size="14" letter-spacing="4" fill="#006B3C">
+    FOUNDATION
+  </text>
+
+  <!-- Tagline Strip -->
+  <text x="108" y="72" font-family="'Inter', sans-serif" font-weight="600" font-size="9.5" letter-spacing="0.5" fill="#F47B20">
+    Spiritual Values • Social Impact • A Brighter India
+  </text>
+</svg>
