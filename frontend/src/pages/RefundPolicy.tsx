@@ -80,7 +80,7 @@ const RefundPolicy: React.FC = () => {
           <div className="mt-4 text-xs font-semibold text-gray-500 flex items-center justify-center space-x-3">
             <span>Last Updated: <strong className="text-primary-navy">{lastUpdated}</strong></span>
             <span>•</span>
-            <span>Gateway: <strong className="text-primary-green">Razorpay Verified Integration</strong></span>
+            <span>Gateway: <strong className="text-primary-green">Cashfree Verified Integration</strong></span>
           </div>
         </div>
 
@@ -203,7 +203,7 @@ const RefundPolicy: React.FC = () => {
                   3. Exact Donation Amount (₹) and Transaction Date
                 </div>
                 <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 font-semibold text-gray-800">
-                  4. Razorpay Payment Order ID / Payment Reference ID
+                  4. Cashfree Payment Order ID / Payment Reference ID
                 </div>
               </div>
             </section>
@@ -215,7 +215,7 @@ const RefundPolicy: React.FC = () => {
                 <span>{language === 'en' ? 'Gateway Verification & Resolution' : 'गेटवे सत्यापन और समाधान'}</span>
               </h2>
               <p>
-                Upon receiving your written request, the Foundation will verify the transaction with our payment gateway partner (Razorpay).
+                Upon receiving your written request, the Foundation will verify the transaction with our payment gateway partner (Cashfree).
               </p>
               <ul className="list-disc list-inside text-xs space-y-1.5 text-gray-600 pl-2">
                 <li>If a duplicate debit or technical error is confirmed, approved refunds will be credited back to the original payment source (bank account, credit card, or UPI wallet).</li>

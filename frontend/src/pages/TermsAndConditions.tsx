@@ -31,7 +31,7 @@ const TermsAndConditions: React.FC = () => {
     { id: 'donations', label: '4. Donation Terms', hindiLabel: '4. दान की शर्तें' },
     { id: 'tax', label: '5. Tax Benefit Disclaimer', hindiLabel: '5. कर लाभ संबंधी विवरण' },
     { id: 'failed', label: '6. Failed or Duplicate Payments', hindiLabel: '6. असफल या डुप्लिकेट भुगतान' },
-    { id: 'razorpay', label: '7. Razorpay Payment Gateway', hindiLabel: '7. रेजरपे भुगतान गेटवे' },
+    { id: 'razorpay', label: '7. Cashfree Payment Gateway', hindiLabel: '7. कैशफ्री भुगतान गेटवे' },
     { id: 'ip', label: '8. Intellectual Property Rights', hindiLabel: '8. बौद्धिक संपदा अधिकार' },
     { id: 'volunteers', label: '9. Volunteer Applications', hindiLabel: '9. स्वयंसेवक आवेदन' },
     { id: 'accuracy', label: '10. Accuracy & Availability', hindiLabel: '10. जानकारी की सटीकता' },
@@ -276,14 +276,14 @@ const TermsAndConditions: React.FC = () => {
               </p>
             </section>
 
-            {/* SECTION 7: Razorpay Payment Gateway */}
+            {/* SECTION 7: Cashfree Payment Gateway */}
             <section id="razorpay" className="space-y-3 border-b border-gray-100 pb-8">
               <h2 className="text-xl font-extrabold text-primary-navy flex items-center space-x-2">
                 <span className="w-7 h-7 rounded-lg bg-primary-saffron/10 text-primary-saffron flex items-center justify-center text-xs font-bold">7</span>
-                <span>{language === 'en' ? 'Razorpay Payment Gateway Disclaimer' : 'रेजरपे भुगतान गेटवे'}</span>
+                <span>{language === 'en' ? 'Cashfree Payment Gateway Disclaimer' : 'कैशफ्री भुगतान गेटवे'}</span>
               </h2>
               <p>
-                Online donations are processed through payment gateways integrated with the website (including Razorpay). Payment processing is subject to the payment provider's terms of service, privacy policy, and technical network availability.
+                Online donations are processed through payment gateways integrated with the website (including Cashfree). Payment processing is subject to the payment provider's terms of service, privacy policy, and technical network availability.
               </p>
             </section>
 
@@ -327,7 +327,7 @@ const TermsAndConditions: React.FC = () => {
                 <span>{language === 'en' ? 'Third-Party Services' : 'तीसरे पक्ष की सेवाएं'}</span>
               </h2>
               <p>
-                Integrated services (such as Razorpay payment processing and Cloudinary media distribution) operate under their respective service agreements and terms.
+                Integrated services (such as Cashfree payment processing and Cloudinary media distribution) operate under their respective service agreements and terms.
               </p>
             </section>
 

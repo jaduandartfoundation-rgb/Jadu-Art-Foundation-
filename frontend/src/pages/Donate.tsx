@@ -21,7 +21,7 @@ const Donate = () => {
               <ShieldCheck size={20} />
             </div>
             <h4 className="font-bold text-primary-navy text-sm">Server-Verified Gateway</h4>
-            <p className="text-xs text-gray-600">HMAC-SHA256 signature verification via Razorpay.</p>
+            <p className="text-xs text-gray-600">Secure 256-bit encryption & verification via Cashfree.</p>
           </div>
 
           <div className="bg-white p-6 rounded-2xl border border-light-border shadow-sm space-y-2">

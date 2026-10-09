@@ -30,6 +30,31 @@ const DonationForm: React.FC<DonationFormProps> = ({ defaultCampaign = 'Wherever
   const amounts = [500, 1000, 2500, 5000];
 
   useEffect(() => {
+    // Check if returning from Cashfree payment redirect
+    const returnOrderId = searchParams.get('order_id');
+    if (returnOrderId) {
+      setLoading(true);
+      donationService.verifyPayment({ orderId: returnOrderId })
+        .then((res) => {
+          if (res.data.success) {
+            sessionStorage.setItem('hasDonated', 'true');
+            localStorage.setItem('hasDonated', 'true');
+            navigate('/donate/success', {
+              state: {
+                amount: res.data.data?.amount || amount,
+                campaign: res.data.data?.campaign || formData.campaign,
+                ref: returnOrderId
+              }
+            });
+          } else {
+            navigate('/donate/failed');
+          }
+        })
+        .catch(() => navigate('/donate/failed'))
+        .finally(() => setLoading(false));
+      return;
+    }
+
     // 1. Check URL parameters for amount & initiative
     const paramAmount = searchParams.get('amount');
     if (paramAmount && !isNaN(Number(paramAmount))) {
@@ -62,7 +87,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ defaultCampaign = 'Wherever
         }
       })
       .catch(() => {});
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -112,28 +137,34 @@ const DonationForm: React.FC<DonationFormProps> = ({ defaultCampaign = 'Wherever
         throw new Error(data.message || 'Failed to create payment order');
       }
 
-      const { orderId, amount: orderAmount, currency, donationId } = data.data;
+      const { orderId, paymentSessionId, donationId, isSimulated } = data.data;
 
-      // 2. Open Razorpay Checkout
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YourKeyId',
-        amount: orderAmount,
-        currency: currency,
-        name: 'Jadu & Art Foundation',
-        description: `Donation for ${formData.campaign}`,
-        order_id: orderId,
-        handler: async function (response: any) {
+      const cashfreeMode = (import.meta.env.VITE_CASHFREE_MODE as 'sandbox' | 'production') || 'sandbox';
+
+      // 2. Open Cashfree Checkout if real session & SDK loaded
+      if (!isSimulated && (window as any).Cashfree && paymentSessionId) {
+        const cashfree = (window as any).Cashfree({
+          mode: cashfreeMode
+        });
+
+        cashfree.checkout({
+          paymentSessionId: paymentSessionId,
+          redirectTarget: "_modal"
+        }).then(async (result: any) => {
+          if (result.error) {
+            console.error('Cashfree checkout error:', result.error);
+            setError(result.error.message || 'Payment cancelled or failed');
+            setLoading(false);
+            return;
+          }
+
           try {
-            // 3. Verify payment server-side
             const verifyRes = await donationService.verifyPayment({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
+              orderId: orderId,
               donationId: donationId
             });
 
             if (verifyRes.data.success) {
-              // Store donation flag to prevent popup
               sessionStorage.setItem('hasDonated', 'true');
               localStorage.setItem('hasDonated', 'true');
 
@@ -141,7 +172,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ defaultCampaign = 'Wherever
                 state: { 
                   amount, 
                   campaign: formData.campaign, 
-                  ref: response.razorpay_payment_id 
+                  ref: orderId 
                 } 
               });
             } else {
@@ -150,29 +181,22 @@ const DonationForm: React.FC<DonationFormProps> = ({ defaultCampaign = 'Wherever
           } catch (err) {
             navigate('/donate/failed');
           }
-        },
-        prefill: {
-          name: formData.donorName,
-          email: formData.email,
-          contact: formData.phone
-        },
-        theme: {
-          color: '#FF9933' // Brand Saffron
-        }
-      };
-
-      if ((window as any).Razorpay) {
-        const rzp = new (window as any).Razorpay(options);
-        rzp.on('payment.failed', function () {
-          navigate('/donate/failed');
         });
-        rzp.open();
       } else {
         // Fallback simulation mode
         sessionStorage.setItem('hasDonated', 'true');
         localStorage.setItem('hasDonated', 'true');
-        
-        alert('Simulation mode: Razorpay payment simulation order created successfully. ID: ' + orderId);
+
+        try {
+          await donationService.verifyPayment({
+            orderId: orderId,
+            donationId: donationId,
+            paymentId: `cf_pay_sim_${Date.now()}`,
+            isSimulated: true
+          });
+        } catch (simErr) {}
+
+        alert('Simulation mode: Cashfree payment simulation order created successfully. ID: ' + orderId);
         navigate('/donate/success', { 
           state: { amount, campaign: formData.campaign, ref: 'SIMULATED_PAYMENT_' + Date.now() } 
         });
@@ -381,7 +405,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ defaultCampaign = 'Wherever
 
           <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 font-medium pt-2">
             <ShieldCheck className="w-4 h-4 text-primary-green" />
-            <span>256-bit Encrypted & Server Verified via Razorpay</span>
+            <span>256-bit Encrypted & Server Verified via Cashfree</span>
           </div>
         </form>
       </div>

@@ -250,7 +250,7 @@ const TimedDonationPopup: React.FC = () => {
 
           <div className="flex items-center justify-center space-x-1.5 text-[11px] text-text-secondary font-medium pt-2 border-t border-border">
             <ShieldCheck size={14} className="text-brand-green" />
-            <span>Direct, transparent support via Razorpay</span>
+            <span>Direct, transparent support via Cashfree</span>
           </div>
 
         </div>

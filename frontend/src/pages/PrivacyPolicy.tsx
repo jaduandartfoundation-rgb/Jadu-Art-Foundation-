@@ -33,7 +33,7 @@ const PrivacyPolicy: React.FC = () => {
     { id: 'consent', label: '5. Legal Basis & Consent', hindiLabel: '5. कानूनी आधार एवं सहमति' },
     { id: 'withdraw', label: '6. Withdrawal of Consent', hindiLabel: '6. सहमति वापस लेना' },
     { id: 'sharing', label: '7. Data Sharing & Service Providers', hindiLabel: '7. डेटा साझाकरण और सेवा प्रदाता' },
-    { id: 'razorpay', label: '8. Razorpay Payment Gateway', hindiLabel: '8. रेजरपे (Razorpay) भुगतान प्रसंस्करण' },
+    { id: 'razorpay', label: '8. Cashfree Payment Gateway', hindiLabel: '8. कैशफ्री (Cashfree) भुगतान प्रसंस्करण' },
     { id: 'retention', label: '9. Data Retention', hindiLabel: '9. डेटा प्रतिधारण (Retention)' },
     { id: 'security', label: '10. Data Security Controls', hindiLabel: '10. डेटा सुरक्षा उपाय' },
     { id: 'breaches', label: '11. Personal Data Breaches', hindiLabel: '11. डेटा उल्लंघन प्रक्रिया' },
@@ -226,7 +226,7 @@ const PrivacyPolicy: React.FC = () => {
                 <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-1 font-medium">
                   <strong>CRITICAL PAYMENT CREDENTIAL NOTICE:</strong>
                   <p>
-                    Payment credentials such as complete credit/debit card numbers, CVV, UPI PINs, or net banking passwords are <strong>NEVER stored by {foundationName}</strong>. All online payments are securely processed through our authorized payment gateway partner, <strong>Razorpay</strong>.
+                    Payment credentials such as complete credit/debit card numbers, CVV, UPI PINs, or net banking passwords are <strong>NEVER stored by {foundationName}</strong>. All online payments are securely processed through our authorized payment gateway partner, <strong>Cashfree Payments</strong>.
                   </p>
                 </div>
               </div>
@@ -320,7 +320,7 @@ const PrivacyPolicy: React.FC = () => {
                 Personal information is shared only with trusted infrastructure providers necessary for website operation, or where required by law:
               </p>
               <ul className="list-disc list-inside text-xs space-y-1 text-gray-600 pl-2">
-                <li><strong>Razorpay:</strong> Payment processing infrastructure for online donations.</li>
+                <li><strong>Cashfree Payments:</strong> Payment processing infrastructure for online donations.</li>
                 <li><strong>Cloudinary:</strong> Media asset hosting and image optimization infrastructure.</li>
                 <li><strong>Database & Cloud Hosting:</strong> Secure cloud server database hosting.</li>
                 <li><strong>Law Enforcement / Government Authorities:</strong> Shared only when mandated under valid legal process or court order.</li>
@@ -331,21 +331,21 @@ const PrivacyPolicy: React.FC = () => {
             <section id="razorpay" className="space-y-3 border-b border-gray-100 pb-8">
               <h2 className="text-xl font-extrabold text-primary-navy flex items-center space-x-2">
                 <span className="w-7 h-7 rounded-lg bg-primary-green/10 text-primary-green flex items-center justify-center text-xs font-bold">8</span>
-                <span>{language === 'en' ? 'Payment Processing (Razorpay)' : 'रेजरपे (Razorpay) भुगतान प्रसंस्करण'}</span>
+                <span>{language === 'en' ? 'Payment Processing (Cashfree)' : 'कैशफ्री (Cashfree) भुगतान प्रसंस्करण'}</span>
               </h2>
               <p>
-                Online donations on this website are processed through <strong>Razorpay Software Private Limited</strong>, an authorized payment service provider.
+                Online donations on this website are processed through <strong>Cashfree Payments India Private Limited</strong>, an authorized payment service provider.
               </p>
               <p className="text-xs">
-                Payment transactions are subject to Razorpay’s own terms, privacy policies, and security practices. You may review Razorpay’s official privacy policy here:
+                Payment transactions are subject to Cashfree’s own terms, privacy policies, and security practices. You may review Cashfree’s official privacy policy here:
               </p>
               <a 
-                href="https://razorpay.com/privacy/" 
+                href="https://www.cashfree.com/privacy-policy/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center space-x-1.5 text-primary-saffron font-bold hover:underline text-xs bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-200"
               >
-                <span>Read Official Razorpay Privacy Policy</span>
+                <span>Read Official Cashfree Privacy Policy</span>
                 <ExternalLink size={14} />
               </a>
             </section>

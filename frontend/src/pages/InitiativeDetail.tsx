@@ -291,7 +291,7 @@ const InitiativeDetail: React.FC = () => {
                 <div className="space-y-3 pt-2 text-xs font-semibold text-gray-500 border-t border-light-border">
                   <div className="flex items-center space-x-2">
                     <ShieldCheck className="w-4 h-4 text-primary-green flex-shrink-0" />
-                    <span>Instant Razorpay Payment Receipt</span>
+                    <span>Instant Cashfree Payment Receipt</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="w-4 h-4 text-primary-navy flex-shrink-0" />

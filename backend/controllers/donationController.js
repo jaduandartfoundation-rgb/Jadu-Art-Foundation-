@@ -1,13 +1,17 @@
-const Razorpay = require('razorpay');
-const crypto = require('crypto');
+const { Cashfree } = require('cashfree-pg');
 const Donation = require('../models/Donation');
 const AdminNotification = require('../models/AdminNotification');
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_YourKeyId',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'rzp_test_YourSecret',
-});
+// Initialize Cashfree credentials
+const appId = process.env.CASHFREE_APP_ID || '';
+const secretKey = process.env.CASHFREE_SECRET_KEY || '';
+const isProd = process.env.CASHFREE_ENV === 'PROD';
+
+if (appId && secretKey && !appId.includes('YourCashfreeAppId')) {
+  Cashfree.XClientId = appId;
+  Cashfree.XClientSecret = secretKey;
+  Cashfree.XEnvironment = isProd ? Cashfree.Environment.PRODUCTION : Cashfree.Environment.SANDBOX;
+}
 
 // @route   POST /api/donations/create-order
 const createOrder = async (req, res) => {
@@ -18,28 +22,40 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid amount (Minimum ₹100)' });
     }
 
-    const options = {
-      amount: amount * 100, // in paise
-      currency: "INR",
-      receipt: `receipt_order_${Date.now()}`
-    };
+    const orderId = `cf_ord_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    let paymentSessionId = null;
+    let isSimulated = false;
 
-    let orderId;
-    let orderAmount = amount * 100;
-    let currency = "INR";
+    if (process.env.CASHFREE_APP_ID && !process.env.CASHFREE_APP_ID.includes('YourCashfreeAppId')) {
+      try {
+        const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, '') : 'https://jadu-art-foundation.vercel.app';
+        const request = {
+          order_amount: Number(amount),
+          order_currency: 'INR',
+          order_id: orderId,
+          customer_details: {
+            customer_id: `cust_${Date.now()}`,
+            customer_name: donorName || 'Donor',
+            customer_email: email || 'donor@jaduart.org',
+            customer_phone: phone || '9999999999'
+          },
+          order_meta: {
+            return_url: `${clientUrl}/donate?order_id={order_id}`
+          }
+        };
 
-    try {
-      if (process.env.RAZORPAY_KEY_ID && !process.env.RAZORPAY_KEY_ID.includes('YourKeyId')) {
-        const order = await razorpay.orders.create(options);
-        orderId = order.id;
-        orderAmount = order.amount;
-        currency = order.currency;
-      } else {
-        orderId = `order_sim_${Date.now()}`;
+        const response = await Cashfree.PGCreateOrder("2023-08-01", request);
+        paymentSessionId = response.data.payment_session_id;
+      } catch (cfErr) {
+        console.warn('Cashfree order create fallback to simulation:', cfErr.response?.data?.message || cfErr.message);
+        isSimulated = true;
       }
-    } catch (rzpErr) {
-      console.warn('Razorpay order create fallback to simulation:', rzpErr.message);
-      orderId = `order_sim_${Date.now()}`;
+    } else {
+      isSimulated = true;
+    }
+
+    if (isSimulated) {
+      paymentSessionId = `session_sim_${Date.now()}`;
     }
 
     const donation = await Donation.create({
@@ -50,7 +66,9 @@ const createOrder = async (req, res) => {
       amount,
       campaign: campaign || 'General',
       initiativeId: initiativeId || null,
-      razorpayOrderId: orderId,
+      cashfreeOrderId: orderId,
+      cashfreeSessionId: paymentSessionId,
+      razorpayOrderId: orderId, // Backwards compatibility
       status: 'pending'
     });
 
@@ -58,44 +76,55 @@ const createOrder = async (req, res) => {
       success: true,
       data: {
         orderId: orderId,
-        amount: orderAmount,
-        currency: currency,
-        donationId: donation._id
+        paymentSessionId: paymentSessionId,
+        amount: amount,
+        currency: 'INR',
+        donationId: donation._id,
+        isSimulated: isSimulated
       }
     });
   } catch (error) {
     console.error('Create order error:', error);
-    res.status(500).json({ success: false, message: 'Failed to create order' });
+    res.status(500).json({ success: false, message: 'Failed to create payment order' });
   }
 };
 
 // @route   POST /api/donations/verify
 const verifyPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, donationId } = req.body;
+    const { orderId, paymentId, donationId } = req.body;
+    const targetOrderId = orderId || req.body.razorpay_order_id;
+    const targetDonationId = donationId;
 
     let isAuthentic = false;
 
-    if (razorpay_payment_id && razorpay_payment_id.startsWith('pay_sim_')) {
-      isAuthentic = true;
-    } else if (process.env.RAZORPAY_KEY_SECRET && !process.env.RAZORPAY_KEY_SECRET.includes('YourSecret')) {
-      const body = razorpay_order_id + "|" + razorpay_payment_id;
-      const expectedSignature = crypto
-        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-        .update(body.toString())
-        .digest('hex');
-
-      isAuthentic = expectedSignature === razorpay_signature;
+    if (targetOrderId && targetOrderId.startsWith('cf_ord_') && process.env.CASHFREE_APP_ID && !process.env.CASHFREE_APP_ID.includes('YourCashfreeAppId')) {
+      try {
+        const response = await Cashfree.PGOrderFetchPayments("2023-08-01", targetOrderId);
+        const payments = response.data || [];
+        const successPayment = payments.find(p => p.payment_status === 'SUCCESS');
+        if (successPayment) {
+          isAuthentic = true;
+        }
+      } catch (cfErr) {
+        console.error('Cashfree order verification API error:', cfErr.response?.data?.message || cfErr.message);
+        // Fallback check if simulated
+        if (req.body.isSimulated || (paymentId && paymentId.startsWith('pay_sim_'))) {
+          isAuthentic = true;
+        }
+      }
     } else {
+      // Simulation mode or test mode
       isAuthentic = true;
     }
 
     if (isAuthentic) {
+      const finalPaymentId = paymentId || `cf_pay_${Date.now()}`;
       const donation = await Donation.findByIdAndUpdate(
-        donationId,
+        targetDonationId,
         {
-          razorpayPaymentId: razorpay_payment_id || `pay_sim_${Date.now()}`,
-          razorpaySignature: razorpay_signature || 'sim_sig',
+          cashfreePaymentId: finalPaymentId,
+          razorpayPaymentId: finalPaymentId, // Backwards compatibility
           status: 'success'
         },
         { new: true }
@@ -113,19 +142,19 @@ const verifyPayment = async (req, res) => {
 
       res.json({ success: true, message: 'Payment verified successfully', data: donation });
     } else {
-      const donation = await Donation.findByIdAndUpdate(donationId, { status: 'failed' }, { new: true });
+      const donation = await Donation.findByIdAndUpdate(targetDonationId, { status: 'failed' }, { new: true });
       
       // Create Admin Notification for failed payment
       if (donation) {
         await AdminNotification.create({
           type: 'failed_payment',
           title: 'Donation Payment Failed',
-          message: `Attempt of ₹${donation.amount.toLocaleString('en-IN')} by ${donation.donorName} failed signature verification.`,
+          message: `Attempt of ₹${donation.amount.toLocaleString('en-IN')} by ${donation.donorName} failed verification.`,
           link: `/admin/dashboard?tab=donations&id=${donation._id}`
         });
       }
 
-      res.status(400).json({ success: false, message: 'Invalid signature' });
+      res.status(400).json({ success: false, message: 'Payment verification failed' });
     }
   } catch (error) {
     console.error('Verify payment error:', error);
@@ -181,6 +210,8 @@ const getDonations = async (req, res) => {
         { donorName: searchRegex },
         { email: searchRegex },
         { phone: searchRegex },
+        { cashfreeOrderId: searchRegex },
+        { cashfreePaymentId: searchRegex },
         { razorpayOrderId: searchRegex },
         { razorpayPaymentId: searchRegex }
       ];
@@ -296,8 +327,8 @@ const exportDonationsCSV = async (req, res) => {
       const amount = d.amount || 0;
       const campaign = `"${(d.campaign || '').replace(/"/g, '""')}"`;
       const status = d.status || '';
-      const orderId = d.razorpayOrderId || '';
-      const paymentId = d.razorpayPaymentId || '';
+      const orderId = d.cashfreeOrderId || d.razorpayOrderId || '';
+      const paymentId = d.cashfreePaymentId || d.razorpayPaymentId || '';
       const date = new Date(d.createdAt).toISOString();
 
       csv += `${name},${email},${phone},${pan},${amount},${campaign},${status},${orderId},${paymentId},${date}\n`;

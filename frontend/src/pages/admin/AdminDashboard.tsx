@@ -734,7 +734,7 @@ const AdminDashboard: React.FC = () => {
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <div>
                   <h3 className="text-xl font-bold text-primary-navy uppercase tracking-wider">Donations Management</h3>
-                  <p className="text-xs text-gray-500">Verified Razorpay payment transactions persistent in MongoDB.</p>
+                  <p className="text-xs text-gray-500">Verified Cashfree payment transactions persistent in MongoDB.</p>
                 </div>
                 
                 <button
@@ -830,8 +830,8 @@ const AdminDashboard: React.FC = () => {
                           </td>
 
                           <td className="p-3 font-mono text-[10px] text-gray-500">
-                            <div>Pay: {item.razorpayPaymentId || '-'}</div>
-                            <div>Ord: {item.razorpayOrderId || '-'}</div>
+                            <div>Pay: {item.cashfreePaymentId || item.razorpayPaymentId || '-'}</div>
+                            <div>Ord: {item.cashfreeOrderId || item.razorpayOrderId || '-'}</div>
                           </td>
 
                           <td className="p-3">
@@ -2238,8 +2238,8 @@ const AdminDashboard: React.FC = () => {
                 <div><span className="font-bold text-gray-500">Email:</span> {selectedDonation.email}</div>
                 <div><span className="font-bold text-gray-500">Phone:</span> {selectedDonation.phone}</div>
                 <div><span className="font-bold text-gray-500">PAN:</span> {selectedDonation.pan || 'N/A'}</div>
-                <div><span className="font-bold text-gray-500">Razorpay Order ID:</span> {selectedDonation.razorpayOrderId}</div>
-                <div><span className="font-bold text-gray-500">Razorpay Payment ID:</span> {selectedDonation.razorpayPaymentId}</div>
+                <div><span className="font-bold text-gray-500">Order ID:</span> {selectedDonation.cashfreeOrderId || selectedDonation.razorpayOrderId || 'N/A'}</div>
+                <div><span className="font-bold text-gray-500">Payment ID:</span> {selectedDonation.cashfreePaymentId || selectedDonation.razorpayPaymentId || 'N/A'}</div>
                 <div><span className="font-bold text-gray-500">Date:</span> {new Date(selectedDonation.createdAt).toLocaleString('en-IN')}</div>
               </div>
             </div>
