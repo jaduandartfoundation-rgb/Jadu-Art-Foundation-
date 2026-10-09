@@ -1,19 +1,18 @@
-const { Cashfree } = require('cashfree-pg');
+const { Cashfree, CFEnvironment } = require('cashfree-pg');
+const mongoose = require('mongoose');
 const Donation = require('../models/Donation');
 const AdminNotification = require('../models/AdminNotification');
 
-const getCashfreeConfig = () => {
+const getCashfreeInstance = () => {
   const appId = process.env.CASHFREE_APP_ID || '';
   const secretKey = process.env.CASHFREE_SECRET_KEY || '';
   const isProd = process.env.CASHFREE_ENV === 'PROD';
 
   if (appId && secretKey && !appId.includes('YourCashfreeAppId')) {
-    Cashfree.XClientId = appId;
-    Cashfree.XClientSecret = secretKey;
-    Cashfree.XEnvironment = isProd ? Cashfree.Environment.PRODUCTION : Cashfree.Environment.SANDBOX;
-    return true;
+    const env = isProd ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
+    return new Cashfree(env, appId, secretKey);
   }
-  return false;
+  return null;
 };
 
 // @route   POST /api/donations/create-order
@@ -29,11 +28,13 @@ const createOrder = async (req, res) => {
     let paymentSessionId = null;
     let isSimulated = false;
 
-    const isConfigured = getCashfreeConfig();
+    const cashfree = getCashfreeInstance();
 
-    if (isConfigured) {
+    if (cashfree) {
       try {
         const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, '') : 'https://jadu-art-foundation.vercel.app';
+        const cleanPhone = (phone || '').replace(/\D/g, '').slice(-10) || '9999999999';
+        
         const request = {
           order_amount: Number(amount),
           order_currency: 'INR',
@@ -42,14 +43,14 @@ const createOrder = async (req, res) => {
             customer_id: `cust_${Date.now()}`,
             customer_name: donorName || 'Donor',
             customer_email: email || 'donor@jaduart.org',
-            customer_phone: phone || '9999999999'
+            customer_phone: cleanPhone
           },
           order_meta: {
             return_url: `${clientUrl}/donate?order_id={order_id}`
           }
         };
 
-        const response = await Cashfree.PGCreateOrder("2023-08-01", request);
+        const response = await cashfree.PGCreateOrder(request);
         paymentSessionId = response.data.payment_session_id;
       } catch (cfErr) {
         console.warn('Cashfree order create fallback to simulation:', cfErr.response?.data?.message || cfErr.message);
@@ -63,14 +64,16 @@ const createOrder = async (req, res) => {
       paymentSessionId = `session_sim_${Date.now()}`;
     }
 
+    const validInitiativeId = (initiativeId && mongoose.Types.ObjectId.isValid(initiativeId)) ? initiativeId : null;
+
     const donation = await Donation.create({
-      donorName,
-      email,
-      phone,
-      pan,
-      amount,
+      donorName: donorName || 'Anonymous',
+      email: email || '',
+      phone: phone || '',
+      pan: pan || '',
+      amount: Number(amount),
       campaign: campaign || 'General',
-      initiativeId: initiativeId || null,
+      initiativeId: validInitiativeId,
       cashfreeOrderId: orderId,
       cashfreeSessionId: paymentSessionId,
       razorpayOrderId: orderId, // Backwards compatibility
@@ -89,8 +92,8 @@ const createOrder = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Create order error:', error);
-    res.status(500).json({ success: false, message: 'Failed to create payment order' });
+    console.error('Create order error details:', error);
+    res.status(500).json({ success: false, message: 'Failed to create payment order: ' + (error.message || 'Server error') });
   }
 };
 
@@ -103,11 +106,11 @@ const verifyPayment = async (req, res) => {
 
     let isAuthentic = false;
 
-    const isConfigured = getCashfreeConfig();
+    const cashfree = getCashfreeInstance();
 
-    if (targetOrderId && targetOrderId.startsWith('cf_ord_') && isConfigured) {
+    if (targetOrderId && targetOrderId.startsWith('cf_ord_') && cashfree) {
       try {
-        const response = await Cashfree.PGOrderFetchPayments("2023-08-01", targetOrderId);
+        const response = await cashfree.PGOrderFetchPayments(targetOrderId);
         const payments = response.data || [];
         const successPayment = payments.find(p => p.payment_status === 'SUCCESS');
         if (successPayment) {
@@ -127,15 +130,28 @@ const verifyPayment = async (req, res) => {
 
     if (isAuthentic) {
       const finalPaymentId = paymentId || `cf_pay_${Date.now()}`;
-      const donation = await Donation.findByIdAndUpdate(
-        targetDonationId,
-        {
-          cashfreePaymentId: finalPaymentId,
-          razorpayPaymentId: finalPaymentId, // Backwards compatibility
-          status: 'success'
-        },
-        { new: true }
-      );
+      let donation = null;
+      if (targetDonationId && mongoose.Types.ObjectId.isValid(targetDonationId)) {
+        donation = await Donation.findByIdAndUpdate(
+          targetDonationId,
+          {
+            cashfreePaymentId: finalPaymentId,
+            razorpayPaymentId: finalPaymentId, // Backwards compatibility
+            status: 'success'
+          },
+          { new: true }
+        );
+      } else if (targetOrderId) {
+        donation = await Donation.findOneAndUpdate(
+          { cashfreeOrderId: targetOrderId },
+          {
+            cashfreePaymentId: finalPaymentId,
+            razorpayPaymentId: finalPaymentId,
+            status: 'success'
+          },
+          { new: true }
+        );
+      }
 
       // Create Admin Notification for successful donation
       if (donation) {
@@ -149,7 +165,10 @@ const verifyPayment = async (req, res) => {
 
       res.json({ success: true, message: 'Payment verified successfully', data: donation });
     } else {
-      const donation = await Donation.findByIdAndUpdate(targetDonationId, { status: 'failed' }, { new: true });
+      let donation = null;
+      if (targetDonationId && mongoose.Types.ObjectId.isValid(targetDonationId)) {
+        donation = await Donation.findByIdAndUpdate(targetDonationId, { status: 'failed' }, { new: true });
+      }
       
       // Create Admin Notification for failed payment
       if (donation) {
@@ -195,7 +214,7 @@ const getDonations = async (req, res) => {
       query.campaign = new RegExp(campaign, 'i');
     }
 
-    if (initiativeId) {
+    if (initiativeId && mongoose.Types.ObjectId.isValid(initiativeId)) {
       query.initiativeId = initiativeId;
     }
 
@@ -254,6 +273,9 @@ const getDonations = async (req, res) => {
 // @route   GET /api/donations/:id (Admin - Single Donation Details)
 const getDonationById = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: 'Invalid donation ID' });
+    }
     const donation = await Donation.findById(req.params.id).populate('initiativeId');
     if (!donation) {
       return res.status(404).json({ success: false, message: 'Donation record not found' });
