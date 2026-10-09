@@ -2,16 +2,19 @@ const { Cashfree } = require('cashfree-pg');
 const Donation = require('../models/Donation');
 const AdminNotification = require('../models/AdminNotification');
 
-// Initialize Cashfree credentials
-const appId = process.env.CASHFREE_APP_ID || '';
-const secretKey = process.env.CASHFREE_SECRET_KEY || '';
-const isProd = process.env.CASHFREE_ENV === 'PROD';
+const getCashfreeConfig = () => {
+  const appId = process.env.CASHFREE_APP_ID || '';
+  const secretKey = process.env.CASHFREE_SECRET_KEY || '';
+  const isProd = process.env.CASHFREE_ENV === 'PROD';
 
-if (appId && secretKey && !appId.includes('YourCashfreeAppId')) {
-  Cashfree.XClientId = appId;
-  Cashfree.XClientSecret = secretKey;
-  Cashfree.XEnvironment = isProd ? Cashfree.Environment.PRODUCTION : Cashfree.Environment.SANDBOX;
-}
+  if (appId && secretKey && !appId.includes('YourCashfreeAppId')) {
+    Cashfree.XClientId = appId;
+    Cashfree.XClientSecret = secretKey;
+    Cashfree.XEnvironment = isProd ? Cashfree.Environment.PRODUCTION : Cashfree.Environment.SANDBOX;
+    return true;
+  }
+  return false;
+};
 
 // @route   POST /api/donations/create-order
 const createOrder = async (req, res) => {
@@ -26,7 +29,9 @@ const createOrder = async (req, res) => {
     let paymentSessionId = null;
     let isSimulated = false;
 
-    if (process.env.CASHFREE_APP_ID && !process.env.CASHFREE_APP_ID.includes('YourCashfreeAppId')) {
+    const isConfigured = getCashfreeConfig();
+
+    if (isConfigured) {
       try {
         const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, '') : 'https://jadu-art-foundation.vercel.app';
         const request = {
@@ -98,7 +103,9 @@ const verifyPayment = async (req, res) => {
 
     let isAuthentic = false;
 
-    if (targetOrderId && targetOrderId.startsWith('cf_ord_') && process.env.CASHFREE_APP_ID && !process.env.CASHFREE_APP_ID.includes('YourCashfreeAppId')) {
+    const isConfigured = getCashfreeConfig();
+
+    if (targetOrderId && targetOrderId.startsWith('cf_ord_') && isConfigured) {
       try {
         const response = await Cashfree.PGOrderFetchPayments("2023-08-01", targetOrderId);
         const payments = response.data || [];
