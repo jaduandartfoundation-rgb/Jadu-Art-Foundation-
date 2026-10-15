@@ -17,6 +17,7 @@ export interface SiteSettingsType {
   youtubeUrl?: string;
   linkedinUrl?: string;
   whatsappNumber?: string;
+  supportPhone?: string;
   author: string;
   googleAnalyticsId: string;
   googleSearchConsoleVerification: string;
@@ -84,7 +85,8 @@ const defaultSettings: SiteSettingsType = {
   instagramUrl: '',
   youtubeUrl: '',
   linkedinUrl: '',
-  whatsappNumber: '',
+  whatsappNumber: '95896 21753',
+  supportPhone: '95896 21753',
   author: 'Jadu & Art Foundation',
   googleAnalyticsId: '',
   googleSearchConsoleVerification: '',

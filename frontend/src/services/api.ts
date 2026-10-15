@@ -39,12 +39,19 @@ api.interceptors.response.use(
 );
 
 export const donationService = {
+  getPublicConfig: () => api.get('/donations/public-config'),
+  confirmDirectDonation: (data: any) => api.post('/donations/confirm', data),
   createOrder: (data: any) => api.post('/donations/create-order', data),
   verifyPayment: (data: any) => api.post('/donations/verify', data),
   getDonations: (params?: any) => api.get('/donations', { params }),
   getDonationById: (id: string) => api.get(`/donations/${id}`),
+  verifyDonation: (id: string, data: any) => api.patch(`/donations/${id}/verify`, data),
+  recordAcknowledgement: (id: string, data: any) => api.patch(`/donations/${id}/acknowledgement`, data),
   getDonationReports: () => api.get('/donations/reports'),
   exportCSV: () => api.get('/donations/export', { responseType: 'blob' }),
+  getAdminDonationSettings: () => api.get('/settings/donation-settings'),
+  updateDonationSettings: (data: any) => api.put('/settings/donation-settings', data),
+  verifyDonationGate: (data: any) => api.patch('/settings/donation-settings/verify-gate', data),
 };
 
 export const authService = {

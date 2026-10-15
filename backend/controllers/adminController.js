@@ -12,18 +12,25 @@ const { logAudit } = require('../utils/auditLogger');
 // GET /api/admin/stats (Real Database Stats & Overview)
 const getAdminStats = async (req, res) => {
   try {
-    const totalDonationsCount = await Donation.countDocuments({ status: 'success' });
-    const donations = await Donation.find({ status: 'success' });
+    // Only verified & success donations count towards totals (Requirement 8)
+    const verifiedStatusFilter = { status: { $in: ['verified', 'success'] } };
+    const totalDonationsCount = await Donation.countDocuments(verifiedStatusFilter);
+    const donations = await Donation.find(verifiedStatusFilter);
     const totalAmountRaised = donations.reduce((sum, d) => sum + (d.amount || 0), 0);
 
-    // Calculate this month's total raised
+    // Calculate this month's total raised (verified only)
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const thisMonthDonations = await Donation.find({
-      status: 'success',
+      ...verifiedStatusFilter,
       createdAt: { $gte: firstDayOfMonth }
     });
     const thisMonthAmountRaised = thisMonthDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
+
+    // Pending donation confirmations awaiting verification
+    const pendingConfirmationsCount = await Donation.countDocuments({ 
+      status: { $in: ['pending', 'pending_verification'] } 
+    });
 
     const volunteerCount = await Volunteer.countDocuments();
     const pendingVolunteers = await Volunteer.countDocuments({ status: 'pending' });
@@ -49,6 +56,7 @@ const getAdminStats = async (req, res) => {
         totalDonationsCount,
         totalAmountRaised,
         thisMonthAmountRaised,
+        pendingConfirmationsCount,
         volunteerCount,
         pendingVolunteers,
         enquiryCount,

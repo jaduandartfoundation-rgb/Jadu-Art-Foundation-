@@ -16,6 +16,7 @@ const TeamMember = require('./models/TeamMember');
 const Document = require('./models/Document');
 const SiteContent = require('./models/SiteContent');
 const SiteSettings = require('./models/SiteSettings');
+const DonationSettings = require('./models/DonationSettings');
 
 const seedData = async () => {
   try {
@@ -70,6 +71,46 @@ const seedData = async () => {
       }
     });
     console.log('Site settings seeded.');
+
+    // 2.5 Donation Settings (Official Bank Details, UPI & QR Verification System)
+    const existingDonationSettings = await DonationSettings.findOne();
+    if (!existingDonationSettings) {
+      await DonationSettings.create({
+        bankDetails: {
+          accountHolder: 'Jadu and Art Foundation',
+          bankName: 'Punjab National Bank',
+          accountNumber: '1896102100000714',
+          ifsc: 'PUNB0189610',
+          branch: 'Janjgir (Janjgir - Champa)',
+          verificationStatus: 'Awaiting Verification',
+          verificationNotes: 'Supplied initial values from foundation records; awaiting formal administrative verification against bank records.'
+        },
+        upiDetails: {
+          upiId: '79875 57650m3@pnb', // Contains space as supplied, unverified
+          recipientName: 'JADU AND ART FOUNDATION',
+          verificationStatus: 'Awaiting Verification',
+          verificationNotes: 'Supplied text contains space. Awaiting admin verification of exact UPI handle.'
+        },
+        qrDetails: {
+          qrImageUrl: 'https://res.cloudinary.com/urnn2fkr/image/upload/v1792096134/jadu-art/donations/iyiqks043w9he0q6exse.jpg',
+          localFallbackUrl: '/official-pnb-qr.jpg',
+          verificationStatus: 'Verified',
+          verificationNotes: 'Official Punjab National Bank merchant QR image matches foundation records.'
+        },
+        supportContact: {
+          phone: '95896 21753',
+          whatsapp: '95896 21753',
+          email: 'jaduandartfoundation@gmail.com'
+        },
+        methodsEnabled: {
+          upi: true,
+          bankTransfer: true,
+          razorpay: false,
+          razorpayStatus: 'pending_activation'
+        }
+      });
+      console.log('Donation settings seeded.');
+    }
 
     // 3. Site Content (Homepage, About, Contact, Footer, SEO, Section Visibility, Founder Content)
     await SiteContent.deleteMany({});

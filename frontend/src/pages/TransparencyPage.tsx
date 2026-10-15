@@ -39,18 +39,18 @@ const TransparencyPage: React.FC = () => {
             </div>
           </div>
 
-          {/* 12A & 80G Status */}
+          {/* Statutory Registration & Tax Exemption Status */}
           <div className="bg-white p-8 rounded-3xl border border-light-border shadow-sm space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary-saffron/10 text-primary-saffron flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-700 flex items-center justify-center">
               <Award size={24} />
             </div>
-            <h3 className="text-xl font-bold text-primary-navy">12A & 80G Tax Certificates</h3>
+            <h3 className="text-xl font-bold text-primary-navy">Tax Exemption & Statutory Status</h3>
             <p className="text-gray-600 text-sm leading-relaxed">
-              Legal tax exemption documentation filed with the Income Tax Department of India for donor tax deduction eligibility.
+              Official statutory documentation and tax benefit status (12A / 80G) are currently undergoing formal administrative verification against legal certificates.
             </p>
-            <div className="p-3 bg-primary-saffron/10 rounded-xl border border-primary-saffron/20 text-xs font-semibold text-primary-saffron flex items-center space-x-2">
-              <CheckCircle size={16} />
-              <span>12A & 80G Registration Active</span>
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs font-semibold text-amber-800 flex items-center space-x-2">
+              <CheckCircle size={16} className="text-amber-600" />
+              <span>Status Under Verification • Tax Deductibility Claims Disabled</span>
             </div>
           </div>
 

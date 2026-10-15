@@ -148,7 +148,7 @@ const InitiativeDetail: React.FC = () => {
                 </div>
                 <div className="flex items-center space-x-1.5 bg-gray-100 px-3 py-1.5 rounded-lg">
                   <ShieldCheck size={14} className="text-primary-navy" />
-                  <span>Verified 80G Compliant</span>
+                  <span>Direct Social Cause</span>
                 </div>
               </div>
             </div>

@@ -21,6 +21,8 @@ import {
 } from '../../services/api';
 import ImageUploader from '../../components/ImageUploader';
 import MediaLibraryPage from './MediaLibraryPage';
+import DonationSettingsTab from './DonationSettingsTab';
+import DonationAcknowledgementModal from '../../components/donation/DonationAcknowledgementModal';
 import { 
   BarChart3, 
   DollarSign, 
@@ -45,7 +47,13 @@ import {
   UserCheck,
   History,
   Calendar,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Building2,
+  QrCode,
+  AlertTriangle,
+  AlertCircle,
+  CheckCircle2,
+  Clock
 } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
@@ -71,6 +79,7 @@ const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     | 'overview' 
     | 'donations' 
+    | 'donation_settings'
     | 'cms_homepage' 
     | 'cms_about' 
     | 'cms_work' 
@@ -108,13 +117,25 @@ const AdminDashboard: React.FC = () => {
   // Donations specific filters & modal
   const [donationFilter, setDonationFilter] = useState({
     status: 'all',
+    paymentMethod: 'all',
     search: '',
     startDate: '',
     endDate: '',
     minAmount: '',
     maxAmount: ''
   });
+  const [donationSummary, setDonationSummary] = useState({
+    pendingVerification: 0,
+    verified: 0,
+    rejected: 0,
+    total: 0
+  });
   const [selectedDonation, setSelectedDonation] = useState<any>(null);
+  const [acknowledgementModalDonation, setAcknowledgementModalDonation] = useState<any>(null);
+  const [verifyActionLoading, setVerifyActionLoading] = useState(false);
+  const [verificationRemarks, setVerificationRemarks] = useState('');
+  const [rejectionReasonInput, setRejectionReasonInput] = useState('');
+  const [showRejectPrompt, setShowRejectPrompt] = useState(false);
 
   // General Form Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -165,7 +186,12 @@ const AdminDashboard: React.FC = () => {
 
     if (activeTab === 'donations') {
       donationService.getDonations(donationFilter)
-        .then(res => setDataList(res.data.data || []))
+        .then(res => {
+          setDataList(res.data.data || []);
+          if (res.data.summaryCounts) {
+            setDonationSummary(res.data.summaryCounts);
+          }
+        })
         .finally(() => setLoading(false));
     } 
     else if (activeTab === 'cms_work') {
@@ -259,6 +285,47 @@ const AdminDashboard: React.FC = () => {
       a.click();
     } catch (err) {
       alert('Failed to export CSV file.');
+    }
+  };
+
+  // Donation verification & acknowledgement handlers
+  const handleVerifyDonationStatus = async (donationId: string, status: 'verified' | 'rejected', notes?: string, reason?: string) => {
+    setVerifyActionLoading(true);
+    try {
+      const res = await donationService.verifyDonation(donationId, {
+        status,
+        adminNotes: notes || '',
+        rejectionReason: reason || ''
+      });
+      if (res.data && res.data.success) {
+        setDataList((prev: any[]) => prev.map(d => d._id === donationId ? res.data.data : d));
+        setSelectedDonation(res.data.data);
+        setShowRejectPrompt(false);
+        setVerificationRemarks('');
+        setRejectionReasonInput('');
+        fetchStats();
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to update donation verification status');
+    } finally {
+      setVerifyActionLoading(false);
+    }
+  };
+
+  const handleToggleAcknowledgement = async (donationId: string, sent: boolean) => {
+    try {
+      const res = await donationService.recordAcknowledgement(donationId, { sent });
+      if (res.data && res.data.success) {
+        setDataList((prev: any[]) => prev.map(d => d._id === donationId ? res.data.data : d));
+        if (selectedDonation?._id === donationId) {
+          setSelectedDonation(res.data.data);
+        }
+        if (acknowledgementModalDonation?._id === donationId) {
+          setAcknowledgementModalDonation(res.data.data);
+        }
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to update acknowledgement status');
     }
   };
 
@@ -504,6 +571,7 @@ const AdminDashboard: React.FC = () => {
                   { id: 'cms_testimonials', label: 'Testimonials', icon: MessageSquare },
                   { id: 'cms_team', label: 'Team CMS', icon: Users },
                   { id: 'cms_documents', label: 'Transparency Docs', icon: ShieldCheck },
+                  { id: 'donation_settings', label: 'Donation Settings CMS', icon: Building2 },
                   { id: 'cms_contact', label: 'Contact Information', icon: MessageSquare },
                   { id: 'cms_legal', label: 'Legal Policies CMS', icon: ShieldCheck },
                   { id: 'cms_org_details', label: 'Org & Legal Details', icon: FileText },
@@ -534,12 +602,29 @@ const AdminDashboard: React.FC = () => {
             
             <button
               onClick={() => setActiveTab('donations')}
-              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'donations' ? 'bg-primary-navy text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
-              <DollarSign size={16} />
-              <span>Donations</span>
+              <div className="flex items-center space-x-3">
+                <DollarSign size={16} />
+                <span>Donations</span>
+              </div>
+              {stats.pendingConfirmationsCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white">
+                  {stats.pendingConfirmationsCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('donation_settings')}
+              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'donation_settings' ? 'bg-primary-navy text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <Building2 size={16} />
+              <span>Donation Settings CMS</span>
             </button>
 
             <button
@@ -730,24 +815,101 @@ const AdminDashboard: React.FC = () => {
 
           {/* TAB 2: DONATIONS MANAGEMENT */}
           {activeTab === 'donations' && (
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-6 space-y-4">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-6 space-y-5">
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <div>
-                  <h3 className="text-xl font-bold text-primary-navy uppercase tracking-wider">Donations Management</h3>
-                  <p className="text-xs text-gray-500">Verified Cashfree payment transactions persistent in MongoDB.</p>
+                  <h3 className="text-xl font-bold text-primary-navy uppercase tracking-wider">
+                    Donations Management & Bank Reconciliation
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Verify direct UPI QR and bank transfers against Punjab National Bank statement credits.
+                  </p>
                 </div>
                 
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setActiveTab('donation_settings')}
+                    className="bg-emerald-50 text-[#006B3C] border border-emerald-300 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 hover:bg-emerald-100 transition-colors"
+                  >
+                    <Building2 size={15} />
+                    <span>Donation Settings CMS</span>
+                  </button>
+
+                  <button
+                    onClick={handleExportCSV}
+                    className="bg-primary-green text-white px-4 py-2 rounded-xl text-xs font-extrabold flex items-center space-x-1.5 shadow hover:bg-green-700 transition-colors"
+                  >
+                    <Download size={16} />
+                    <span>EXPORT CSV</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Status Filter Pills */}
+              <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 pb-3 text-xs font-bold">
                 <button
-                  onClick={handleExportCSV}
-                  className="bg-primary-green text-white px-4 py-2 rounded-xl text-xs font-extrabold flex items-center space-x-1.5 shadow hover:bg-green-700 transition-colors"
+                  type="button"
+                  onClick={() => setDonationFilter({ ...donationFilter, status: 'all' })}
+                  className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                    donationFilter.status === 'all'
+                      ? 'bg-primary-navy text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
-                  <Download size={16} />
-                  <span>EXPORT CSV</span>
+                  All Records ({donationSummary.total || dataList.length})
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDonationFilter({ ...donationFilter, status: 'pending' })}
+                  className={`px-3 py-1.5 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer ${
+                    donationFilter.status === 'pending'
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+                  }`}
+                >
+                  <Clock size={13} />
+                  <span>Pending Confirmations</span>
+                  {donationSummary.pendingVerification > 0 && (
+                    <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-500 text-white">
+                      {donationSummary.pendingVerification}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDonationFilter({ ...donationFilter, status: 'verified' })}
+                  className={`px-3 py-1.5 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer ${
+                    donationFilter.status === 'verified'
+                      ? 'bg-[#006B3C] text-white shadow-sm'
+                      : 'bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100'
+                  }`}
+                >
+                  <CheckCircle2 size={13} />
+                  <span>Verified Donations</span>
+                  {donationSummary.verified > 0 && (
+                    <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-700 text-white">
+                      {donationSummary.verified}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDonationFilter({ ...donationFilter, status: 'rejected' })}
+                  className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                    donationFilter.status === 'rejected'
+                      ? 'bg-red-600 text-white shadow-sm'
+                      : 'bg-red-50 text-red-800 border border-red-200 hover:bg-red-100'
+                  }`}
+                >
+                  <span>Rejected Confirmations ({donationSummary.rejected || 0})</span>
                 </button>
               </div>
 
-              {/* Filter Controls */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs">
+              {/* Advanced Filter Controls */}
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs">
                 <div>
                   <label className="block font-bold text-gray-600 mb-1">Status</label>
                   <select
@@ -756,17 +918,35 @@ const AdminDashboard: React.FC = () => {
                     className="w-full p-2 bg-white border border-gray-300 rounded-lg font-semibold"
                   >
                     <option value="all">All Statuses</option>
-                    <option value="success">Success</option>
-                    <option value="pending">Pending</option>
+                    <option value="pending">Pending Verification</option>
+                    <option value="verified">Verified (Bank Credit)</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="success">Gateway Success</option>
                     <option value="failed">Failed</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-600 mb-1">Search Donor / ID</label>
+                  <label className="block font-bold text-gray-600 mb-1">Payment Method</label>
+                  <select
+                    value={donationFilter.paymentMethod || 'all'}
+                    onChange={(e) => setDonationFilter({ ...donationFilter, paymentMethod: e.target.value })}
+                    className="w-full p-2 bg-white border border-gray-300 rounded-lg font-semibold"
+                  >
+                    <option value="all">All Methods</option>
+                    <option value="UPI">UPI (QR / App)</option>
+                    <option value="NEFT">NEFT (Bank Transfer)</option>
+                    <option value="IMPS">IMPS (Bank Transfer)</option>
+                    <option value="Gateway">Cashfree / Online Gateway</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-600 mb-1">Search Donor / UTR</label>
                   <input
                     type="text"
-                    placeholder="Name, email, payment ID..."
+                    placeholder="Name, email, UTR reference..."
                     value={donationFilter.search}
                     onChange={(e) => setDonationFilter({ ...donationFilter, search: e.target.value })}
                     className="w-full p-2 bg-white border border-gray-300 rounded-lg"
@@ -806,11 +986,12 @@ const AdminDashboard: React.FC = () => {
                       <tr className="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
                         <th className="p-3">Donor Info</th>
                         <th className="p-3">Amount</th>
+                        <th className="p-3">Method & Reference (UTR)</th>
                         <th className="p-3">Initiative / Campaign</th>
-                        <th className="p-3">Payment / Order ID</th>
                         <th className="p-3">Status</th>
+                        <th className="p-3">Ack. Sent</th>
                         <th className="p-3">Date</th>
-                        <th className="p-3 text-right">Details</th>
+                        <th className="p-3 text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -818,41 +999,67 @@ const AdminDashboard: React.FC = () => {
                         <tr key={item._id} className="hover:bg-gray-50/80">
                           <td className="p-3 font-medium text-gray-800">
                             <div className="font-bold text-sm text-primary-navy">{item.donorName}</div>
-                            <div className="text-[11px] text-gray-500">{item.email} • {item.phone}</div>
+                            <div className="text-[11px] text-gray-500">{item.email} {item.phone ? `• ${item.phone}` : ''}</div>
                           </td>
 
                           <td className="p-3 font-black text-primary-navy">
                             ₹{(item.amount || 0).toLocaleString('en-IN')}
                           </td>
 
-                          <td className="p-3 text-gray-700 font-semibold">
-                            {item.campaign}
+                          <td className="p-3">
+                            <div className="flex items-center space-x-1.5">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-gray-100 text-gray-800 border border-gray-200">
+                                {item.paymentMethod || item.paymentType || 'Transfer'}
+                              </span>
+                            </div>
+                            <div className="font-mono text-[11px] font-bold text-gray-700 mt-0.5">
+                              {item.transactionRef || item.cashfreePaymentId || item.razorpayPaymentId || '-'}
+                            </div>
+                            {item.hasDuplicateWarning && (
+                              <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 mt-1">
+                                <AlertTriangle size={11} className="text-amber-700" />
+                                <span>Duplicate UTR ({item.duplicateCount})</span>
+                              </span>
+                            )}
                           </td>
 
-                          <td className="p-3 font-mono text-[10px] text-gray-500">
-                            <div>Pay: {item.cashfreePaymentId || item.razorpayPaymentId || '-'}</div>
-                            <div>Ord: {item.cashfreeOrderId || item.razorpayOrderId || '-'}</div>
+                          <td className="p-3 text-gray-700 font-semibold">
+                            {item.campaign || 'General Support'}
                           </td>
 
                           <td className="p-3">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                              item.status === 'success' ? 'bg-green-100 text-green-800' :
-                              item.status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                              item.status === 'verified' || item.status === 'success' ? 'bg-green-100 text-green-800 border border-green-300' :
+                              item.status === 'rejected' || item.status === 'failed' ? 'bg-red-100 text-red-800 border border-red-300' : 
+                              'bg-amber-100 text-amber-900 border border-amber-300 font-extrabold'
                             }`}>
-                              {item.status}
+                              {item.status === 'pending_verification' ? 'Pending Review' : item.status}
                             </span>
                           </td>
 
+                          <td className="p-3 text-center">
+                            {item.acknowledgementSent ? (
+                              <span className="text-emerald-700 font-bold text-[11px]">✓ Sent</span>
+                            ) : (
+                              <span className="text-gray-400 text-[11px]">-</span>
+                            )}
+                          </td>
+
                           <td className="p-3 text-gray-500 text-[11px]">
-                            {new Date(item.createdAt).toLocaleDateString('en-IN')}
+                            {new Date(item.paymentDate || item.createdAt).toLocaleDateString('en-IN')}
                           </td>
 
                           <td className="p-3 text-right">
                             <button
-                              onClick={() => setSelectedDonation(item)}
-                              className="px-2.5 py-1 bg-primary-navy/10 text-primary-navy rounded-lg font-bold hover:bg-primary-navy hover:text-white transition-colors"
+                              onClick={() => {
+                                setSelectedDonation(item);
+                                setVerificationRemarks(item.adminNotes || '');
+                                setRejectionReasonInput(item.rejectionReason || '');
+                                setShowRejectPrompt(false);
+                              }}
+                              className="px-3 py-1 bg-primary-navy/10 text-primary-navy rounded-lg font-bold hover:bg-primary-navy hover:text-white transition-colors cursor-pointer"
                             >
-                              View
+                              Review / Verify
                             </button>
                           </td>
                         </tr>
@@ -862,6 +1069,11 @@ const AdminDashboard: React.FC = () => {
                 </div>
               )}
             </div>
+          )}
+
+          {/* TAB 2.5: DONATION SETTINGS CMS */}
+          {activeTab === 'donation_settings' && (
+            <DonationSettingsTab />
           )}
 
           {/* TAB 3: HOMEPAGE CMS */}
@@ -2126,7 +2338,7 @@ const AdminDashboard: React.FC = () => {
           {activeTab === 'media' && <MediaLibraryPage />}
 
           {/* Fallback generic table for remaining tabs */}
-          {!['overview', 'donations', 'cms_homepage', 'cms_work', 'settings', 'cms_seo', 'cms_sections', 'cms_legal', 'cms_org_details', 'media'].includes(activeTab) && (
+          {!['overview', 'donations', 'donation_settings', 'cms_homepage', 'cms_work', 'settings', 'cms_seo', 'cms_sections', 'cms_legal', 'cms_org_details', 'media'].includes(activeTab) && (
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold text-primary-navy uppercase tracking-wider">{activeTab.replace('cms_', '')} Management</h3>
@@ -2208,52 +2420,264 @@ const AdminDashboard: React.FC = () => {
         </main>
       </div>
 
-      {/* Donation Details Modal */}
+      {/* Donation Details & Reconciliation Modal */}
       {selectedDonation && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6">
-            <div className="flex justify-between items-center border-b pb-3">
-              <h3 className="text-xl font-bold text-primary-navy">Donation Record Details</h3>
-              <button onClick={() => setSelectedDonation(null)} className="text-gray-400 font-bold text-lg">✕</button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="flex justify-between p-3 bg-gray-50 rounded-xl">
-                <span className="font-bold text-gray-500">Donor Name:</span>
-                <span className="font-black text-primary-navy text-sm">{selectedDonation.donorName}</span>
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl space-y-5 my-8 border border-gray-200">
+            {/* Header */}
+            <div className="flex justify-between items-center border-b pb-4">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full inline-block mb-1">
+                  Donation Review & Reconciliation
+                </span>
+                <h3 className="text-xl font-bold text-primary-navy">
+                  {selectedDonation.donorName}
+                </h3>
               </div>
-              <div className="flex justify-between p-3 bg-gray-50 rounded-xl">
-                <span className="font-bold text-gray-500">Amount Paid:</span>
-                <span className="font-black text-primary-saffron text-base">₹{selectedDonation.amount?.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="flex justify-between p-3 bg-gray-50 rounded-xl">
-                <span className="font-bold text-gray-500">Initiative / Campaign:</span>
-                <span className="font-bold text-gray-800">{selectedDonation.campaign}</span>
-              </div>
-              <div className="flex justify-between p-3 bg-gray-50 rounded-xl">
-                <span className="font-bold text-gray-500">Payment Status:</span>
-                <span className="font-bold uppercase text-green-700">{selectedDonation.status}</span>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-xl space-y-1 font-mono text-[11px]">
-                <div><span className="font-bold text-gray-500">Email:</span> {selectedDonation.email}</div>
-                <div><span className="font-bold text-gray-500">Phone:</span> {selectedDonation.phone}</div>
-                <div><span className="font-bold text-gray-500">PAN:</span> {selectedDonation.pan || 'N/A'}</div>
-                <div><span className="font-bold text-gray-500">Order ID:</span> {selectedDonation.cashfreeOrderId || selectedDonation.razorpayOrderId || 'N/A'}</div>
-                <div><span className="font-bold text-gray-500">Payment ID:</span> {selectedDonation.cashfreePaymentId || selectedDonation.razorpayPaymentId || 'N/A'}</div>
-                <div><span className="font-bold text-gray-500">Date:</span> {new Date(selectedDonation.createdAt).toLocaleString('en-IN')}</div>
-              </div>
-            </div>
-
-            <div className="pt-2 text-right">
               <button 
-                onClick={() => setSelectedDonation(null)}
-                className="bg-primary-navy text-white px-6 py-2 rounded-xl text-xs font-bold"
+                onClick={() => {
+                  setSelectedDonation(null);
+                  setShowRejectPrompt(false);
+                }} 
+                className="text-gray-400 hover:text-gray-700 bg-gray-100 p-2 rounded-full font-bold cursor-pointer transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Duplicate UTR Warning Banner */}
+            {selectedDonation.hasDuplicateWarning && (
+              <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl text-amber-950 space-y-1.5 text-xs">
+                <div className="flex items-center space-x-1.5 font-black text-amber-900">
+                  <AlertTriangle size={16} className="text-amber-700 shrink-0" />
+                  <span>DUPLICATE TRANSACTION REFERENCE / UTR DETECTED</span>
+                </div>
+                <p className="leading-relaxed">
+                  The transaction reference <strong>"{selectedDonation.transactionRef}"</strong> appears in <strong>{selectedDonation.duplicateCount}</strong> donation confirmation submissions. Please cross-check Punjab National Bank statement credits carefully before verifying.
+                </p>
+              </div>
+            )}
+
+            {/* Main Info Grid */}
+            <div className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="font-bold text-gray-500 block text-[11px]">Amount Donated:</span>
+                  <span className="font-black text-[#006B3C] text-lg">₹{selectedDonation.amount?.toLocaleString('en-IN')}</span>
+                </div>
+
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="font-bold text-gray-500 block text-[11px]">Reconciliation Status:</span>
+                  <span className={`inline-block mt-0.5 px-2.5 py-0.5 rounded text-[11px] font-black uppercase ${
+                    selectedDonation.status === 'verified' || selectedDonation.status === 'success' ? 'bg-green-100 text-green-800 border border-green-300' :
+                    selectedDonation.status === 'rejected' || selectedDonation.status === 'failed' ? 'bg-red-100 text-red-800 border border-red-300' :
+                    'bg-amber-100 text-amber-900 border border-amber-300 font-extrabold'
+                  }`}>
+                    {selectedDonation.status === 'pending_verification' ? 'Pending Bank Verification' : selectedDonation.status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Payment details */}
+              <div className="p-4 bg-gray-50 rounded-xl space-y-2 border border-gray-200">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="font-bold text-gray-500 block text-[11px]">Payment Method:</span>
+                    <span className="font-bold text-gray-800">{selectedDonation.paymentMethod || selectedDonation.paymentType || 'Direct Transfer'}</span>
+                  </div>
+
+                  <div>
+                    <span className="font-bold text-gray-500 block text-[11px]">Transaction Date:</span>
+                    <span className="font-medium text-gray-800">{new Date(selectedDonation.paymentDate || selectedDonation.createdAt).toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="font-bold text-gray-500 block text-[11px]">Transaction Ref / UTR:</span>
+                  <span className="font-mono font-black text-sm text-[#063F36] bg-white px-2 py-0.5 rounded border border-gray-300 inline-block">
+                    {selectedDonation.transactionRef || selectedDonation.cashfreePaymentId || selectedDonation.razorpayPaymentId || 'N/A'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-200">
+                  <div>
+                    <span className="font-bold text-gray-500 block text-[11px]">Donor Email:</span>
+                    <span className="font-medium text-gray-800">{selectedDonation.email || '-'}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-gray-500 block text-[11px]">Phone:</span>
+                    <span className="font-medium text-gray-800">{selectedDonation.phone || 'Not provided'}</span>
+                  </div>
+                </div>
+
+                {selectedDonation.campaign && (
+                  <div>
+                    <span className="font-bold text-gray-500 block text-[11px]">Designated Initiative:</span>
+                    <span className="font-semibold text-gray-800">{selectedDonation.campaign}</span>
+                  </div>
+                )}
+
+                {selectedDonation.donorMessage && (
+                  <div className="p-2.5 bg-white rounded-lg border border-gray-200 text-gray-700 italic">
+                    "{selectedDonation.donorMessage}"
+                  </div>
+                )}
+              </div>
+
+              {/* Verified Info */}
+              {selectedDonation.verifiedBy && (
+                <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-1 text-[11px]">
+                  <div className="font-bold text-emerald-900 flex items-center space-x-1.5">
+                    <CheckCircle2 size={13} className="text-emerald-700" />
+                    <span>Verified by {selectedDonation.verifiedBy.adminName} ({selectedDonation.verifiedBy.adminEmail})</span>
+                  </div>
+                  <div className="text-emerald-800">
+                    Timestamp: {new Date(selectedDonation.verifiedAt).toLocaleString('en-IN')}
+                  </div>
+                  {selectedDonation.adminNotes && (
+                    <div className="text-emerald-950 font-medium pt-0.5">
+                      Notes: "{selectedDonation.adminNotes}"
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Rejection Info */}
+              {selectedDonation.status === 'rejected' && selectedDonation.rejectionReason && (
+                <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl space-y-1 text-[11px] text-red-900">
+                  <div className="font-bold flex items-center space-x-1.5">
+                    <AlertCircle size={13} className="text-red-600" />
+                    <span>Rejected: {selectedDonation.rejectionReason}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Verification Gate Action Box (For Pending Records) */}
+              {(selectedDonation.status === 'pending_verification' || selectedDonation.status === 'pending') && (
+                <div className="p-4 bg-gray-100 rounded-2xl border border-gray-300 space-y-3">
+                  <span className="font-black text-[#063F36] uppercase tracking-wider block text-xs">
+                    Admin Verification Action
+                  </span>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                      Bank Statement Verification Notes (e.g. Credit confirmed in PNB A/c):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Optional remarks about credit entry..."
+                      value={verificationRemarks}
+                      onChange={(e) => setVerificationRemarks(e.target.value)}
+                      className="w-full p-2 bg-white border border-gray-300 rounded-lg text-xs"
+                    />
+                  </div>
+
+                  {showRejectPrompt ? (
+                    <div className="space-y-2 pt-2 border-t border-gray-200">
+                      <label className="block text-[11px] font-bold text-red-700">
+                        Reason for Rejection *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Transaction reference not found in PNB statement"
+                        value={rejectionReasonInput}
+                        onChange={(e) => setRejectionReasonInput(e.target.value)}
+                        className="w-full p-2 bg-white border border-red-300 rounded-lg text-xs font-medium"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={verifyActionLoading || !rejectionReasonInput.trim()}
+                          onClick={() => handleVerifyDonationStatus(selectedDonation._id, 'rejected', verificationRemarks, rejectionReasonInput)}
+                          className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs disabled:opacity-50 cursor-pointer"
+                        >
+                          Confirm Rejection
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowRejectPrompt(false)}
+                          className="py-2 px-3 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={verifyActionLoading}
+                        onClick={() => handleVerifyDonationStatus(selectedDonation._id, 'verified', verificationRemarks)}
+                        className="flex-1 py-2.5 px-4 bg-[#006B3C] hover:bg-emerald-800 text-white font-black text-xs rounded-xl shadow transition-colors flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <CheckCircle2 size={14} />
+                        <span>{verifyActionLoading ? 'Verifying...' : 'Verify Donation (Confirm Credit)'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={verifyActionLoading}
+                        onClick={() => setShowRejectPrompt(true)}
+                        className="py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="pt-3 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+              <div className="flex items-center space-x-2 w-full sm:w-auto">
+                {(selectedDonation.status === 'verified' || selectedDonation.status === 'success') && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setAcknowledgementModalDonation(selectedDonation)}
+                      className="py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-[#006B3C] border border-emerald-300 rounded-xl text-xs font-bold flex items-center space-x-1 cursor-pointer"
+                    >
+                      <FileText size={13} />
+                      <span>Acknowledgement Slip</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleToggleAcknowledgement(selectedDonation._id, !selectedDonation.acknowledgementSent)}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                        selectedDonation.acknowledgementSent
+                          ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                          : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300'
+                      }`}
+                    >
+                      {selectedDonation.acknowledgementSent ? '✓ Ack. Recorded' : 'Record Ack. Sent'}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <button 
+                onClick={() => {
+                  setSelectedDonation(null);
+                  setShowRejectPrompt(false);
+                }}
+                className="bg-primary-navy text-white px-6 py-2 rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors w-full sm:w-auto cursor-pointer"
               >
                 Close
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Official Non-80G Acknowledgement Slip Modal */}
+      {acknowledgementModalDonation && (
+        <DonationAcknowledgementModal
+          donation={acknowledgementModalDonation}
+          onClose={() => setAcknowledgementModalDonation(null)}
+          onMarkAcknowledgementSent={(sent) => handleToggleAcknowledgement(acknowledgementModalDonation._id, sent)}
+        />
       )}
 
       {/* CRUD Creation/Edit Modal */}
