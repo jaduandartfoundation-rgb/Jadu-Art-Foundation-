@@ -161,7 +161,10 @@ export const impactService = {
 export const volunteerService = {
   submitVolunteer: (data: any) => api.post('/volunteers', data),
   getVolunteers: () => api.get('/volunteers'),
-  updateStatus: (id: string, status: string) => api.patch(`/volunteers/${id}`, { status }),
+  getVolunteerById: (id: string) => api.get(`/volunteers/${id}`),
+  updateStatus: (id: string, data: string | { status?: string; adminNotes?: string }) =>
+    api.patch(`/volunteers/${id}`, typeof data === 'string' ? { status: data } : data),
+  deleteVolunteer: (id: string) => api.delete(`/volunteers/${id}`),
 };
 
 export const enquiryService = {

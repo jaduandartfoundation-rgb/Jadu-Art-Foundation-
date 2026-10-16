@@ -33,7 +33,7 @@ const getAdminStats = async (req, res) => {
     });
 
     const volunteerCount = await Volunteer.countDocuments();
-    const pendingVolunteers = await Volunteer.countDocuments({ status: 'pending' });
+    const pendingVolunteers = await Volunteer.countDocuments({ status: { $in: ['pending', 'New'] } });
     const enquiryCount = await Enquiry.countDocuments();
     const newEnquiries = await Enquiry.countDocuments({ status: 'new' });
     const activeInitiatives = await DonationInitiative.countDocuments({ status: 'active', published: true });
