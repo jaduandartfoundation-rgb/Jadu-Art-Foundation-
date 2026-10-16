@@ -79,10 +79,7 @@ const InitiativeDetail: React.FC = () => {
     );
   }
 
-  const raised = initiative.raisedAmount || 0;
-  const target = initiative.targetAmount || 1;
-  const progressPct = initiative.progress !== undefined ? initiative.progress : Math.min(100, Math.round((raised / target) * 100));
-  const isGoalReached = progressPct >= 100;
+
 
   return (
     <div className="bg-warm-off-white min-h-screen font-sans text-dark-text">
@@ -144,7 +141,7 @@ const InitiativeDetail: React.FC = () => {
                 )}
                 <div className="flex items-center space-x-1.5 bg-gray-100 px-3 py-1.5 rounded-lg">
                   <Target size={14} className="text-primary-green" />
-                  <span>Target: ₹{target.toLocaleString('en-IN')}</span>
+                  <span>Direct Community Welfare</span>
                 </div>
                 <div className="flex items-center space-x-1.5 bg-gray-100 px-3 py-1.5 rounded-lg">
                   <ShieldCheck size={14} className="text-primary-navy" />
@@ -249,26 +246,16 @@ const InitiativeDetail: React.FC = () => {
                 
                 <div className="space-y-1">
                   <span className="text-xs font-bold text-primary-saffron uppercase tracking-wider block">SUPPORT THIS CAUSE</span>
-                  <h3 className="text-2xl font-black text-primary-navy">Financial Progress</h3>
+                  <h3 className="text-2xl font-black text-primary-navy">Direct Social Contribution</h3>
                 </div>
 
-                <div className="space-y-3 p-4 bg-warm-off-white rounded-2xl border border-light-border">
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-xs font-bold text-gray-500 uppercase">RAISED AMOUNT</span>
-                    {isGoalReached ? (
-                      <span className="text-xs font-black bg-primary-green text-white px-2 py-0.5 rounded uppercase">GOAL REACHED</span>
-                    ) : (
-                      <span className="text-sm font-extrabold text-primary-saffron">{progressPct}%</span>
-                    )}
-                  </div>
-
-                  <div className="text-3xl font-black text-primary-navy">
-                    ₹{raised.toLocaleString('en-IN')}
-                  </div>
-
-                  <div className="flex justify-between text-xs font-bold text-gray-500 pt-1">
-                    <span>Target: ₹{target.toLocaleString('en-IN')}</span>
-                    <span>Remaining: ₹{Math.max(0, target - raised).toLocaleString('en-IN')}</span>
+                <div className="space-y-2.5 p-4.5 bg-warm-off-white rounded-2xl border border-light-border">
+                  <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                    {initiative.impactDescription || 'Your contribution directly empowers ground deployment, medical assistance, food feeding, and welfare initiatives with verified accountability.'}
+                  </p>
+                  <div className="pt-1 flex items-center space-x-1.5 text-[11px] font-bold text-primary-navy">
+                    <span className="w-2 h-2 rounded-full bg-primary-green inline-block"></span>
+                    <span>Active Ground Deployment</span>
                   </div>
                 </div>
 
@@ -326,10 +313,9 @@ const InitiativeDetail: React.FC = () => {
                       {rel.shortDescription}
                     </p>
                   </div>
-                  <div className="pt-2 border-t border-light-border flex justify-between items-center text-xs font-bold text-primary-navy">
-                    <span>₹{(rel.raisedAmount || 0).toLocaleString('en-IN')} Raised</span>
-                    <span className="flex items-center text-primary-saffron">
-                      <span>View</span>
+                  <div className="pt-2 border-t border-light-border flex justify-end items-center text-xs font-bold text-primary-saffron">
+                    <span className="flex items-center">
+                      <span>View Initiative</span>
                       <ArrowRight size={12} className="ml-1" />
                     </span>
                   </div>

@@ -138,11 +138,6 @@ const DonationInitiativesSection: React.FC = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {displayedInitiatives.map((item) => {
-                const target = item.targetAmount || 1;
-                const raised = item.raisedAmount || 0;
-                const progressPct = item.progress !== undefined ? item.progress : Math.min(100, Math.round((raised / target) * 100));
-                const isGoalReached = progressPct >= 100;
-
                 return (
                   <div 
                     key={item._id}
@@ -176,35 +171,9 @@ const DonationInitiativesSection: React.FC = () => {
                           </p>
                         )}
 
-                        <p className="text-gray-600 text-sm leading-relaxed mt-3 line-clamp-2 h-10">
+                        <p className="text-gray-600 text-sm leading-relaxed mt-3 line-clamp-3">
                           {item.shortDescription}
                         </p>
-
-                        {/* Financial Info */}
-                        <div className="mt-6 pt-4 border-t border-light-border">
-                          <div className="flex justify-between items-baseline">
-                            <div>
-                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">RAISED</span>
-                              <span className="text-xl font-black text-primary-navy">
-                                ₹{raised.toLocaleString('en-IN')}
-                              </span>
-                              <span className="text-xs text-gray-500 font-medium ml-1.5">
-                                of ₹{target.toLocaleString('en-IN')}
-                              </span>
-                            </div>
-                            <div>
-                              {isGoalReached ? (
-                                <span className="bg-primary-green/15 text-primary-green text-xs font-black px-2.5 py-1 rounded-md tracking-wider">
-                                  GOAL REACHED
-                                </span>
-                              ) : (
-                                <span className="text-base font-extrabold text-primary-saffron">
-                                  {progressPct}%
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
                       </div>
                     </div>
 
