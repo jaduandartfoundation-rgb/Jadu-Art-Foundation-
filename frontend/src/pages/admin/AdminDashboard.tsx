@@ -54,7 +54,9 @@ import {
   AlertTriangle,
   AlertCircle,
   CheckCircle2,
-  Clock
+  Clock,
+  Menu,
+  X
 } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
@@ -109,6 +111,9 @@ const AdminDashboard: React.FC = () => {
 
   // Sub-group state for collapsible sidebar menu
   const [websiteMenuOpen, setWebsiteMenuOpen] = useState(true);
+
+  // Mobile sidebar drawer
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Notification stream
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -450,21 +455,31 @@ const AdminDashboard: React.FC = () => {
     <div className="min-h-screen bg-gray-100 flex flex-col font-sans">
       
       {/* Top Navbar */}
-      <header className="bg-primary-navy text-white py-3 px-6 flex justify-between items-center shadow-md sticky top-0 z-40">
-        <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-xl bg-primary-saffron text-white flex items-center justify-center font-black text-xl">
+      <header className="bg-primary-navy text-white py-3 px-4 md:px-6 flex justify-between items-center shadow-md sticky top-0 z-40">
+        <div className="flex items-center space-x-2 md:space-x-3 min-w-0">
+          {/* Hamburger – mobile only */}
+          <button
+            aria-label="Open navigation menu"
+            onClick={() => setMobileSidebarOpen(true)}
+            className="md:hidden p-2 rounded-xl hover:bg-white/10 transition-colors flex-shrink-0"
+          >
+            <Menu size={20} />
+          </button>
+
+          <div className="w-9 h-9 rounded-xl bg-primary-saffron text-white flex items-center justify-center font-black text-xl flex-shrink-0">
             J
           </div>
-          <div>
-            <span className="font-extrabold text-lg tracking-tight block leading-none">Jadu & Art</span>
-            <span className="text-[10px] text-gray-300 uppercase tracking-widest font-semibold">Central Admin CMS</span>
+          <div className="min-w-0">
+            <span className="font-extrabold text-base md:text-lg tracking-tight block leading-none truncate">Jadu &amp; Art</span>
+            <span className="text-[9px] md:text-[10px] text-gray-300 uppercase tracking-widest font-semibold hidden sm:block">Central Admin CMS</span>
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
           {/* Notifications Dropdown */}
           <div className="relative">
             <button 
+              aria-label="Notifications"
               onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
               className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
             >
@@ -477,67 +492,108 @@ const AdminDashboard: React.FC = () => {
             </button>
 
             {notifDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-2xl shadow-2xl border border-gray-200 py-3 z-50">
-                <div className="px-4 py-2 border-b flex justify-between items-center">
-                  <span className="font-bold text-xs uppercase tracking-wider text-primary-navy">Notifications</span>
-                  <button 
-                    onClick={() => notificationService.markAllAsRead().then(() => fetchNotifications())}
-                    className="text-[10px] font-bold text-primary-saffron hover:underline"
-                  >
-                    Mark all read
-                  </button>
+              <>
+                {/* Backdrop to close dropdown */}
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setNotifDropdownOpen(false)}
+                />
+                {/* Panel – constrained to viewport width */}
+                <div
+                  className="absolute right-0 mt-2 bg-white text-gray-800 rounded-2xl shadow-2xl border border-gray-200 py-3 z-50"
+                  style={{ width: 'min(320px, calc(100vw - 24px))' }}
+                >
+                  <div className="px-4 py-2 border-b flex justify-between items-center gap-2">
+                    <span className="font-bold text-xs uppercase tracking-wider text-primary-navy whitespace-nowrap">Notifications</span>
+                    <button 
+                      onClick={() => notificationService.markAllAsRead().then(() => fetchNotifications())}
+                      className="text-[10px] font-bold text-primary-saffron hover:underline whitespace-nowrap"
+                    >
+                      Mark all read
+                    </button>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto divide-y divide-gray-100">
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-gray-500">No notifications</div>
+                    ) : (
+                      notifications.map((n) => (
+                        <div 
+                          key={n._id} 
+                          onClick={() => {
+                            notificationService.markAsRead(n._id).then(() => fetchNotifications());
+                            setNotifDropdownOpen(false);
+                            if (n.link?.includes('donations')) setActiveTab('donations');
+                          }}
+                          className={`p-3 text-xs cursor-pointer hover:bg-gray-50 transition-colors ${!n.read ? 'bg-orange-50/50 font-semibold' : ''}`}
+                        >
+                          <div className="font-bold text-primary-navy break-words">{n.title}</div>
+                          <div className="text-gray-600 text-[11px] mt-0.5 break-words">{n.message}</div>
+                          <div className="text-[9px] text-gray-400 mt-1">{new Date(n.createdAt).toLocaleTimeString('en-IN')}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-                <div className="max-h-64 overflow-y-auto divide-y divide-gray-100">
-                  {notifications.length === 0 ? (
-                    <div className="p-4 text-center text-xs text-gray-500">No notifications</div>
-                  ) : (
-                    notifications.map((n) => (
-                      <div 
-                        key={n._id} 
-                        onClick={() => {
-                          notificationService.markAsRead(n._id).then(() => fetchNotifications());
-                          setNotifDropdownOpen(false);
-                          if (n.link?.includes('donations')) setActiveTab('donations');
-                        }}
-                        className={`p-3 text-xs cursor-pointer hover:bg-gray-50 transition-colors ${!n.read ? 'bg-orange-50/50 font-semibold' : ''}`}
-                      >
-                        <div className="font-bold text-primary-navy">{n.title}</div>
-                        <div className="text-gray-600 text-[11px] mt-0.5">{n.message}</div>
-                        <div className="text-[9px] text-gray-400 mt-1">{new Date(n.createdAt).toLocaleTimeString('en-IN')}</div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+              </>
             )}
           </div>
 
           {/* User profile & Logout */}
-          <div className="flex items-center space-x-3 border-l border-white/20 pl-4">
+          <div className="flex items-center space-x-2 md:space-x-3 border-l border-white/20 pl-2 md:pl-4">
             <div className="text-right hidden sm:block">
               <div className="text-xs font-bold">{currentUser.name || 'Admin'}</div>
               <div className="text-[10px] text-primary-saffron uppercase font-bold">{currentUser.role || 'Super Admin'}</div>
             </div>
             <button 
               onClick={handleLogout}
-              className="flex items-center space-x-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-colors"
+              className="flex items-center space-x-1.5 bg-white/10 hover:bg-white/20 text-white px-2 md:px-3 py-1.5 rounded-xl text-xs font-bold transition-colors"
             >
               <LogOut size={14} />
-              <span>Logout</span>
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
       </header>
 
       <div className="flex-grow flex">
+
+        {/* Mobile Sidebar Backdrop */}
+        {mobileSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/40 z-40 md:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
         
-        {/* Sidebar Navigation */}
-        <aside className="w-64 bg-white border-r border-gray-200 p-4 space-y-6 flex-shrink-0 hidden md:block">
+        {/* Sidebar Navigation – always visible on md+, slide-in drawer on mobile */}
+        <aside
+          className={`
+            fixed md:static inset-y-0 left-0 z-50
+            w-64 bg-white border-r border-gray-200 p-4 space-y-6 flex-shrink-0
+            overflow-y-auto
+            transition-transform duration-300 ease-in-out
+            md:translate-x-0
+            ${mobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
+          `}
+          style={{ maxHeight: '100dvh', top: 0 }}
+        >
+          {/* Close button – mobile only */}
+          <div className="flex items-center justify-between md:hidden pb-2 border-b border-gray-100">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-gray-500">Navigation</span>
+            <button
+              aria-label="Close navigation menu"
+              onClick={() => setMobileSidebarOpen(false)}
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-600"
+            >
+              <X size={18} />
+            </button>
+          </div>
           
           <div className="space-y-1">
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 px-3">Main</span>
             <button
-              onClick={() => setActiveTab('overview')}
+              onClick={() => { setActiveTab('overview'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'overview' ? 'bg-primary-navy text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'
               }`}
@@ -581,7 +637,7 @@ const AdminDashboard: React.FC = () => {
                   return (
                     <button
                       key={item.id}
-                      onClick={() => setActiveTab(item.id as any)}
+                      onClick={() => { setActiveTab(item.id as any); setMobileSidebarOpen(false); }}
                       className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                         activeTab === item.id ? 'bg-primary-saffron text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
                       }`}
@@ -600,7 +656,7 @@ const AdminDashboard: React.FC = () => {
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 px-3">Management</span>
             
             <button
-              onClick={() => setActiveTab('donations')}
+              onClick={() => { setActiveTab('donations'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'donations' ? 'bg-primary-navy text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'
               }`}
@@ -617,7 +673,7 @@ const AdminDashboard: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setActiveTab('donation_settings')}
+              onClick={() => { setActiveTab('donation_settings'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'donation_settings' ? 'bg-primary-navy text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'
               }`}
@@ -627,7 +683,7 @@ const AdminDashboard: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setActiveTab('volunteers')}
+              onClick={() => { setActiveTab('volunteers'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'volunteers' ? 'bg-primary-navy text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'
               }`}
@@ -637,7 +693,7 @@ const AdminDashboard: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setActiveTab('enquiries')}
+              onClick={() => { setActiveTab('enquiries'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'enquiries' ? 'bg-primary-navy text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'
               }`}
@@ -647,7 +703,7 @@ const AdminDashboard: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setActiveTab('media')}
+              onClick={() => { setActiveTab('media'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'media' ? 'bg-primary-navy text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'
               }`}
@@ -657,7 +713,7 @@ const AdminDashboard: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setActiveTab('settings')}
+              onClick={() => { setActiveTab('settings'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'settings' ? 'bg-primary-navy text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'
               }`}
@@ -669,7 +725,7 @@ const AdminDashboard: React.FC = () => {
             {currentUser.role === 'super_admin' && (
               <>
                 <button
-                  onClick={() => setActiveTab('users')}
+                  onClick={() => { setActiveTab('users'); setMobileSidebarOpen(false); }}
                   className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     activeTab === 'users' ? 'bg-primary-navy text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'
                   }`}
@@ -679,7 +735,7 @@ const AdminDashboard: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => setActiveTab('audit_log')}
+                  onClick={() => { setActiveTab('audit_log'); setMobileSidebarOpen(false); }}
                   className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     activeTab === 'audit_log' ? 'bg-primary-navy text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'
                   }`}
