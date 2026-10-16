@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../services/api';
+import { authService, API_URL } from '../../services/api';
 import { Lock, Mail, ShieldAlert } from 'lucide-react';
 
 const AdminLogin = () => {
@@ -25,7 +25,11 @@ const AdminLogin = () => {
         setError(res.data.message || 'Login failed');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid email or password');
+      if (!err.response) {
+        setError(`Cannot reach server at ${API_URL}. Please check your internet connection or verify backend deployment.`);
+      } else {
+        setError(err.response?.data?.message || 'Invalid email or password');
+      }
     } finally {
       setLoading(false);
     }

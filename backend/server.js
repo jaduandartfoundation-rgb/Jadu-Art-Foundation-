@@ -13,31 +13,20 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 const app = express();
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
+
 app.use(cors({
   origin: function (origin, callback) {
-    const allowedOrigins = [
-      'https://jadu-art-foundation.vercel.app',
-      'http://localhost:5173',
-      'http://localhost:3000',
-      process.env.CLIENT_URL,
-    ].filter(Boolean);
-
     // Allow requests with no origin (mobile apps, curl, Postman, server-to-server)
     if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    // Also allow any *.vercel.app preview deployments
-    if (origin.endsWith('.vercel.app')) {
-      return callback(null, true);
-    }
-
-    callback(new Error(`CORS: origin ${origin} not allowed`));
+    // Allow any incoming origin dynamically by reflecting it (supports custom domains, vercel preview, local dev)
+    return callback(null, true);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
 app.use(express.json());
 app.use(morgan('dev'));

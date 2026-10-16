@@ -13,7 +13,18 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await AdminUser.findOne({ email });
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide email and password' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const possibleEmails = [
+      cleanEmail,
+      cleanEmail.replace('@jaduandart.org', '@jaduart.org'),
+      cleanEmail.replace('@jaduart.org', '@jaduandart.org')
+    ];
+
+    const user = await AdminUser.findOne({ email: { $in: possibleEmails } });
 
     if (user && (await bcrypt.compare(password, user.passwordHash))) {
       res.json({
@@ -30,7 +41,8 @@ const login = async (req, res) => {
       res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Server Error' });
+    console.error('Login error:', error);
+    res.status(500).json({ success: false, message: 'Server Error: ' + (error.message || '') });
   }
 };
 
