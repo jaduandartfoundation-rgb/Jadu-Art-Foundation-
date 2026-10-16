@@ -124,7 +124,7 @@ const InitiativesListPage: React.FC = () => {
                         {item.shortDescription}
                       </p>
 
-                      <div className="mt-6 pt-4 border-t border-light-border space-y-2">
+                      <div className="mt-6 pt-4 border-t border-light-border">
                         <div className="flex justify-between items-baseline">
                           <div>
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">RAISED</span>
@@ -146,13 +146,6 @@ const InitiativesListPage: React.FC = () => {
                               </span>
                             )}
                           </div>
-                        </div>
-
-                        <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                          <div 
-                            className="bg-gradient-to-r from-primary-saffron to-orange-500 h-2.5 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, Math.max(2, progressPct))}%` }}
-                          ></div>
                         </div>
                       </div>
                     </div>

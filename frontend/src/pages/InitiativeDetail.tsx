@@ -270,14 +270,6 @@ const InitiativeDetail: React.FC = () => {
                     <span>Target: ₹{target.toLocaleString('en-IN')}</span>
                     <span>Remaining: ₹{Math.max(0, target - raised).toLocaleString('en-IN')}</span>
                   </div>
-
-                  {/* Progress Bar */}
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                    <div 
-                      className="bg-gradient-to-r from-primary-saffron to-orange-500 h-3 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, Math.max(3, progressPct))}%` }}
-                    ></div>
-                  </div>
                 </div>
 
                 <button
@@ -291,7 +283,7 @@ const InitiativeDetail: React.FC = () => {
                 <div className="space-y-3 pt-2 text-xs font-semibold text-gray-500 border-t border-light-border">
                   <div className="flex items-center space-x-2">
                     <ShieldCheck className="w-4 h-4 text-primary-green flex-shrink-0" />
-                    <span>Instant Cashfree Payment Receipt</span>
+                    <span>Official Bank Transfer & UPI Receipt</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="w-4 h-4 text-primary-navy flex-shrink-0" />

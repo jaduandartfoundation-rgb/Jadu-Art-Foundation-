@@ -1566,7 +1566,7 @@ const AdminDashboard: React.FC = () => {
                       { key: 'heroSection', name: 'Hero Banner Section', desc: 'Main header title, badges & primary donate CTA' },
                       { key: 'impactStrip', name: 'Impact Metrics Strip', desc: 'Live statistics strip (500+ children, 1200+ reached, etc.)' },
                       { key: 'aboutSection', name: 'About Jadu & Art Section', desc: 'Organization background & introduction' },
-                      { key: 'initiativesSection', name: 'Featured Initiatives', desc: 'Featured initiative cards with progress bars' },
+                      { key: 'initiativesSection', name: 'Featured Initiatives', desc: 'Featured initiative cards with donation support' },
                       { key: 'workSection', name: 'Our Work Areas Section', desc: 'Education, Healthcare, Cow Welfare & Relief' },
                       { key: 'founderSection', name: "Founder's Message Section", desc: 'Founder greeting & spiritual vision' },
                       { key: 'lifePhilosophySection', name: 'Life Philosophy Section', desc: 'Make Life Meaningful guidance' },

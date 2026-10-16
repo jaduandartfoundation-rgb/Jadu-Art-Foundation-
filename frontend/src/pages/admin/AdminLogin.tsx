@@ -62,7 +62,7 @@ const AdminLogin = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@jaduart.org"
+                placeholder="admin@example.com"
                 className="w-full pl-10 pr-3.5 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-primary-navy font-medium"
               />
             </div>
@@ -95,10 +95,6 @@ const AdminLogin = () => {
             {loading ? 'Authenticating...' : 'SIGN IN TO DASHBOARD'}
           </button>
         </form>
-
-        <div className="text-center text-[11px] text-gray-400">
-          Default seed credentials: <code className="text-primary-navy font-bold">admin@jaduart.org</code> / <code className="text-primary-navy font-bold">admin123</code>
-        </div>
       </div>
     </div>
   );

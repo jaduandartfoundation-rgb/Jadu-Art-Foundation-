@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { donationService, initiativeService } from '../../services/api';
 import { 
   Send, 
@@ -19,6 +20,7 @@ interface DonationConfirmationFormProps {
 }
 
 const DonationConfirmationForm: React.FC<DonationConfirmationFormProps> = ({ className = '' }) => {
+  const [searchParams] = useSearchParams();
   const [initiatives, setInitiatives] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,11 +45,38 @@ const DonationConfirmationForm: React.FC<DonationConfirmationFormProps> = ({ cla
     initiativeService.getInitiatives()
       .then(res => {
         if (res.data && res.data.data) {
-          setInitiatives(res.data.data);
+          const list = res.data.data;
+          setInitiatives(list);
+
+          const paramInitiative = searchParams.get('initiative') || searchParams.get('campaign');
+          if (paramInitiative) {
+            const matched = list.find((i: any) => 
+              i._id === paramInitiative || 
+              i.slug === paramInitiative || 
+              i.title?.toLowerCase() === paramInitiative.toLowerCase()
+            );
+            if (matched) {
+              setFormData(prev => ({
+                ...prev,
+                campaign: matched.title,
+                initiativeId: matched._id
+              }));
+            } else if (paramInitiative !== 'Wherever Needed Most') {
+              setFormData(prev => ({
+                ...prev,
+                campaign: paramInitiative
+              }));
+            }
+          }
         }
       })
       .catch(() => {});
-  }, []);
+
+    const paramAmount = searchParams.get('amount');
+    if (paramAmount && !isNaN(Number(paramAmount))) {
+      setFormData(prev => ({ ...prev, amount: paramAmount }));
+    }
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

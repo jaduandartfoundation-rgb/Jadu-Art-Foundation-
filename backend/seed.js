@@ -26,7 +26,7 @@ const seedData = async () => {
 
     // 1. Admin User
     await AdminUser.deleteMany({ email: 'admin@jaduart.org' });
-    const passwordHash = await bcrypt.hash('admin123', 10);
+    const passwordHash = await bcrypt.hash('J@du26', 10);
     await AdminUser.create({
       name: 'Jadu & Art Super Admin',
       email: 'admin@jaduart.org',
@@ -34,7 +34,7 @@ const seedData = async () => {
       role: 'super_admin',
       active: true
     });
-    console.log('Super Admin user created: admin@jaduart.org / admin123');
+    console.log('Super Admin user created: admin@jaduart.org');
 
     // 2. Site Settings
     await SiteSettings.deleteMany({});
