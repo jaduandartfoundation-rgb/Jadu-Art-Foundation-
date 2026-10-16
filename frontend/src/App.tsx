@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import TimedDonationPopup from './components/TimedDonationPopup';
@@ -27,10 +27,13 @@ import { Heart } from 'lucide-react';
 
 // Public layout wrapper — renders Navbar, Footer, and shared UI around public pages
 function PublicLayout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const isDonationPage = location.pathname.startsWith('/donate');
+
   return (
     <>
       <Navbar />
-      <main className="flex-grow">
+      <main className={`flex-grow ${isDonationPage ? '' : 'pb-20 lg:pb-0'}`}>
         {children}
       </main>
       <Footer />
@@ -38,16 +41,18 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
       {/* Timed Delayed Donation Popup */}
       <TimedDonationPopup />
       
-      {/* Mobile Sticky Donate Button */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-gray-200 z-50 shadow-2xl">
-        <a 
-          href="/donate" 
-          className="flex items-center justify-center space-x-2 w-full bg-primary-saffron text-white text-center py-3 rounded-xl font-black text-base shadow-lg"
-        >
-          <Heart className="w-5 h-5 fill-white" />
-          <span>DONATE NOW</span>
-        </a>
-      </div>
+      {/* Mobile Sticky Donate Button — hidden on /donate to avoid covering inputs and submission buttons */}
+      {!isDonationPage && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] bg-white/95 backdrop-blur-md border-t border-gray-200 z-40 shadow-2xl">
+          <Link 
+            to="/donate" 
+            className="flex items-center justify-center space-x-2 w-full bg-primary-saffron hover:bg-orange-600 active:scale-[0.99] text-white text-center py-3.5 rounded-xl font-black text-base shadow-lg transition-all"
+          >
+            <Heart className="w-5 h-5 fill-white" />
+            <span>DONATE NOW</span>
+          </Link>
+        </div>
+      )}
     </>
   );
 }

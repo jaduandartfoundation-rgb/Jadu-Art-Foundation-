@@ -274,7 +274,7 @@ const InitiativeDetail: React.FC = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="w-4 h-4 text-primary-navy flex-shrink-0" />
-                    <span>Eligible for tax exemption receipts</span>
+                    <span>Direct Foundation Acknowledgement Receipt</span>
                   </div>
                 </div>
 

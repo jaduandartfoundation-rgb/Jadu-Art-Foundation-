@@ -116,58 +116,60 @@ const Donate: React.FC = () => {
         </div>
 
         {/* Payment Method Selector Tabs */}
-        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 bg-white/80 backdrop-blur-sm p-2 rounded-2xl sm:rounded-3xl border border-[#E4E9E5] shadow-sm max-w-2xl mx-auto">
+        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:justify-center sm:gap-3 bg-white/90 backdrop-blur-sm p-1.5 sm:p-2 rounded-2xl sm:rounded-3xl border border-[#E4E9E5] shadow-sm max-w-2xl mx-auto">
           <button
             type="button"
             onClick={() => setActiveMethod('upi')}
-            className={`flex-1 min-w-[130px] sm:min-w-[150px] py-3 px-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center justify-center space-x-2 cursor-pointer ${
+            className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-all flex flex-col sm:flex-row items-center justify-center sm:space-x-2 text-center cursor-pointer ${
               activeMethod === 'upi'
                 ? 'bg-[#006B3C] text-white shadow-md'
                 : 'text-gray-700 hover:bg-gray-100'
             }`}
           >
-            <QrCode size={16} className={activeMethod === 'upi' ? 'text-[#F47B20]' : 'text-gray-500'} />
-            <span>UPI QR Code</span>
+            <QrCode size={16} className={`shrink-0 mb-1 sm:mb-0 ${activeMethod === 'upi' ? 'text-[#F47B20]' : 'text-gray-500'}`} />
+            <span className="leading-tight">UPI QR Code</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveMethod('bank')}
-            className={`flex-1 min-w-[130px] sm:min-w-[150px] py-3 px-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center justify-center space-x-2 cursor-pointer ${
+            className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-all flex flex-col sm:flex-row items-center justify-center sm:space-x-2 text-center cursor-pointer ${
               activeMethod === 'bank'
                 ? 'bg-[#006B3C] text-white shadow-md'
                 : 'text-gray-700 hover:bg-gray-100'
             }`}
           >
-            <Building2 size={16} className={activeMethod === 'bank' ? 'text-[#F47B20]' : 'text-gray-500'} />
-            <span>Direct Bank Transfer</span>
+            <Building2 size={16} className={`shrink-0 mb-1 sm:mb-0 ${activeMethod === 'bank' ? 'text-[#F47B20]' : 'text-gray-500'}`} />
+            <span className="leading-tight">Bank Transfer</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveMethod('confirm')}
-            className={`flex-1 min-w-[130px] sm:min-w-[150px] py-3 px-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center justify-center space-x-2 cursor-pointer ${
+            className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-all flex flex-col sm:flex-row items-center justify-center sm:space-x-2 text-center cursor-pointer ${
               activeMethod === 'confirm'
                 ? 'bg-[#F47B20] text-white shadow-md'
                 : 'text-gray-700 hover:bg-gray-100'
             }`}
           >
-            <FileText size={16} />
-            <span>Confirm Donation</span>
+            <FileText size={16} className="shrink-0 mb-1 sm:mb-0" />
+            <span className="leading-tight">Confirm Donation</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveMethod('gateway')}
-            className={`py-3 px-4 rounded-xl sm:rounded-2xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
-              activeMethod === 'gateway'
-                ? 'bg-slate-800 text-white shadow-md'
-                : 'text-gray-500 hover:bg-gray-100'
-            }`}
-          >
-            <CreditCard size={15} />
-            <span>Razorpay (Pending)</span>
-          </button>
+          {config.methodsEnabled?.razorpay === true && (
+            <button
+              type="button"
+              onClick={() => setActiveMethod('gateway')}
+              className={`py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl sm:rounded-2xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
+                activeMethod === 'gateway'
+                  ? 'bg-slate-800 text-white shadow-md'
+                  : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              <CreditCard size={15} />
+              <span>Razorpay</span>
+            </button>
+          )}
         </div>
 
         {/* Selected Donation Method View */}
@@ -194,10 +196,11 @@ const Donate: React.FC = () => {
             />
           )}
 
-          {/* Donation Confirmation Form */}
-          <div ref={confirmFormRef} className="pt-2">
-            <DonationConfirmationForm />
-          </div>
+          {activeMethod === 'confirm' && (
+            <div ref={confirmFormRef} className="pt-2 animate-fadeIn">
+              <DonationConfirmationForm />
+            </div>
+          )}
         </div>
 
         {/* Visible Support Section */}

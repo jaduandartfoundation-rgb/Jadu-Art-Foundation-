@@ -76,7 +76,10 @@ const BankTransferCard: React.FC<BankTransferCardProps> = ({ bankConfig, onScrol
   return (
     <div className="bg-white rounded-3xl border-2 border-emerald-900/10 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#063F36] to-[#006B3C] p-6 sm:p-8 text-white relative overflow-hidden">
+      <div 
+        className="bg-[#063F36] bg-gradient-to-r from-[#063F36] to-[#006B3C] p-5 sm:p-8 text-white relative overflow-hidden"
+        style={{ backgroundColor: '#063F36', color: '#ffffff' }}
+      >
         <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-44 h-44 rounded-full bg-white/5 pointer-events-none blur-xl" />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -84,7 +87,7 @@ const BankTransferCard: React.FC<BankTransferCardProps> = ({ bankConfig, onScrol
               <Building2 size={13} className="text-[#F47B20]" />
               <span>DIRECT BANK TRANSFER</span>
             </div>
-            <h3 className="text-xl sm:text-2xl font-black tracking-tight">
+            <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
               DONATE THROUGH BANK TRANSFER
             </h3>
             <p className="text-emerald-100 font-medium text-xs sm:text-sm mt-0.5 hindi-text">
@@ -102,7 +105,7 @@ const BankTransferCard: React.FC<BankTransferCardProps> = ({ bankConfig, onScrol
       </div>
 
       {/* Main Content */}
-      <div className="p-6 sm:p-8 space-y-6">
+      <div className="p-4 sm:p-8 space-y-6">
         {/* Copy Feedback Toast */}
         {copyFeedback && (
           <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl text-xs font-bold flex items-center justify-between animate-fadeIn">
@@ -170,7 +173,7 @@ const BankTransferCard: React.FC<BankTransferCardProps> = ({ bankConfig, onScrol
               <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-emerald-50/60 border-2 border-emerald-200 hover:border-emerald-400 transition-colors gap-2">
                 <div>
                   <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider block">Account Number</span>
-                  <span className="text-base sm:text-lg font-mono font-black text-[#063F36] tracking-wider">{accountNumber}</span>
+                  <span className="text-base sm:text-lg font-mono font-black text-[#063F36] tracking-wider break-all">{accountNumber}</span>
                 </div>
                 <button
                   type="button"
@@ -187,7 +190,7 @@ const BankTransferCard: React.FC<BankTransferCardProps> = ({ bankConfig, onScrol
               <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-emerald-50/60 border-2 border-emerald-200 hover:border-emerald-400 transition-colors gap-2">
                 <div>
                   <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider block">IFSC Code</span>
-                  <span className="text-base sm:text-lg font-mono font-black text-[#063F36] tracking-wider">{ifsc}</span>
+                  <span className="text-base sm:text-lg font-mono font-black text-[#063F36] tracking-wider break-all">{ifsc}</span>
                 </div>
                 <button
                   type="button"

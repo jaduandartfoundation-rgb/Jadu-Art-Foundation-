@@ -77,7 +77,10 @@ const UpiDonationCard: React.FC<UpiDonationCardProps> = ({ upiConfig, qrConfig, 
   return (
     <div className="bg-white rounded-3xl border-2 border-emerald-900/10 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#063F36] to-[#006B3C] p-6 sm:p-8 text-white relative overflow-hidden">
+      <div 
+        className="bg-[#063F36] bg-gradient-to-r from-[#063F36] to-[#006B3C] p-5 sm:p-8 text-white relative overflow-hidden"
+        style={{ backgroundColor: '#063F36', color: '#ffffff' }}
+      >
         <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-44 h-44 rounded-full bg-white/5 pointer-events-none blur-xl" />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -85,7 +88,7 @@ const UpiDonationCard: React.FC<UpiDonationCardProps> = ({ upiConfig, qrConfig, 
               <QrCode size={13} className="text-[#F47B20]" />
               <span>INSTANT ZERO-FEE DONATION</span>
             </div>
-            <h3 className="text-xl sm:text-2xl font-black tracking-tight">
+            <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
               DONATE USING UPI
             </h3>
             <p className="text-emerald-100 font-medium text-xs sm:text-sm mt-0.5 hindi-text">
@@ -103,7 +106,7 @@ const UpiDonationCard: React.FC<UpiDonationCardProps> = ({ upiConfig, qrConfig, 
       </div>
 
       {/* Main Body */}
-      <div className="p-6 sm:p-8 space-y-6">
+      <div className="p-4 sm:p-8 space-y-6">
         {/* Copy Toast Feedback */}
         {copyFeedback && (
           <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl text-xs font-bold flex items-center justify-between animate-fadeIn">
@@ -115,10 +118,10 @@ const UpiDonationCard: React.FC<UpiDonationCardProps> = ({ upiConfig, qrConfig, 
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
           {/* Left Column: Official QR Image Display */}
           <div className="lg:col-span-5 flex flex-col items-center">
-            <div className="relative p-4 sm:p-5 bg-white rounded-3xl border-2 border-emerald-100 shadow-md hover:shadow-lg transition-all group max-w-[280px] sm:max-w-[320px] w-full text-center">
+            <div className="relative p-3.5 sm:p-5 bg-white rounded-3xl border-2 border-emerald-100 shadow-md hover:shadow-lg transition-all group max-w-[260px] sm:max-w-[320px] w-full text-center mx-auto">
               {/* Official Punjab National Bank Banner Header */}
               <div className="mb-3 border-b border-gray-100 pb-2">
                 <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full inline-block">
@@ -129,11 +132,17 @@ const UpiDonationCard: React.FC<UpiDonationCardProps> = ({ upiConfig, qrConfig, 
                 </p>
               </div>
 
-              {/* QR Image */}
+              {/* QR Image with Automatic Local Fallback */}
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border border-gray-100 cursor-pointer" onClick={() => setIsModalOpen(true)}>
                 <img
                   src={qrImageSrc}
                   alt="Jadu & Art Foundation Official UPI QR Code"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (target.src !== (qrConfig.localFallbackUrl || '/official-pnb-qr.jpg')) {
+                      target.src = qrConfig.localFallbackUrl || '/official-pnb-qr.jpg';
+                    }
+                  }}
                   className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
@@ -288,6 +297,12 @@ const UpiDonationCard: React.FC<UpiDonationCardProps> = ({ upiConfig, qrConfig, 
               <img
                 src={qrImageSrc}
                 alt="Enlarged Official QR"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (target.src !== (qrConfig.localFallbackUrl || '/official-pnb-qr.jpg')) {
+                    target.src = qrConfig.localFallbackUrl || '/official-pnb-qr.jpg';
+                  }
+                }}
                 className="w-full h-full object-contain"
               />
             </div>

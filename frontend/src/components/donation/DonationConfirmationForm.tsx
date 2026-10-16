@@ -282,7 +282,10 @@ const DonationConfirmationForm: React.FC<DonationConfirmationFormProps> = ({ cla
   return (
     <div className={`bg-white rounded-3xl border-2 border-emerald-900/10 shadow-xl overflow-hidden transition-all duration-300 ${className}`}>
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#063F36] to-[#006B3C] p-6 sm:p-8 text-white relative overflow-hidden">
+      <div 
+        className="bg-[#063F36] bg-gradient-to-r from-[#063F36] to-[#006B3C] p-5 sm:p-8 text-white relative overflow-hidden"
+        style={{ backgroundColor: '#063F36', color: '#ffffff' }}
+      >
         <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-44 h-44 rounded-full bg-white/5 pointer-events-none blur-xl" />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
@@ -290,7 +293,7 @@ const DonationConfirmationForm: React.FC<DonationConfirmationFormProps> = ({ cla
               <FileText size={13} className="text-[#F47B20]" />
               <span>PAYMENT RECONCILIATION</span>
             </div>
-            <h3 className="text-xl sm:text-2xl font-black tracking-tight">
+            <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
               CONFIRM YOUR DONATION
             </h3>
             <p className="text-emerald-100 font-medium text-xs sm:text-sm mt-0.5 hindi-text">
@@ -305,7 +308,7 @@ const DonationConfirmationForm: React.FC<DonationConfirmationFormProps> = ({ cla
         </div>
       </div>
 
-      <div className="p-6 sm:p-8 space-y-6">
+      <div className="p-4 sm:p-8 space-y-6">
         {/* Error Banner */}
         {error && (
           <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-xs font-semibold flex items-start space-x-2.5">
@@ -337,7 +340,7 @@ const DonationConfirmationForm: React.FC<DonationConfirmationFormProps> = ({ cla
                   type="button"
                   key={amt}
                   onClick={() => setFormData(prev => ({ ...prev, amount: amt.toString() }))}
-                  className={`py-2 px-3 text-center rounded-xl text-xs font-bold border transition-all ${
+                  className={`py-2 px-1.5 sm:px-3 text-center rounded-xl text-xs font-bold border transition-all ${
                     Number(formData.amount) === amt
                       ? 'border-[#F47B20] bg-orange-50 text-[#F47B20] shadow-sm font-black'
                       : 'border-gray-200 hover:border-gray-300 text-gray-700 bg-gray-50/60'
