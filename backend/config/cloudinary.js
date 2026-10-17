@@ -10,8 +10,11 @@ cloudinary.config({
 /**
  * Generate a signed upload signature for direct client-side upload to Cloudinary.
  * Keeps CLOUDINARY_API_SECRET strictly on backend.
+ *
+ * @param {string} folder  - Cloudinary destination folder
+ * @param {string} resourceType - 'image' or 'video' (default: 'image')
  */
-const generateSignature = (folder = 'jadu-art') => {
+const generateSignature = (folder = 'jadu-art', resourceType = 'image') => {
   const timestamp = Math.round(new Date().getTime() / 1000);
   const paramsToSign = {
     timestamp,
@@ -29,6 +32,7 @@ const generateSignature = (folder = 'jadu-art') => {
     apiKey: process.env.CLOUDINARY_API_KEY,
     cloudName: process.env.CLOUDINARY_CLOUD_NAME,
     folder,
+    resourceType,
   };
 };
 

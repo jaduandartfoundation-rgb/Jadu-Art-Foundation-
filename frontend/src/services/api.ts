@@ -148,9 +148,13 @@ export const storyService = {
 };
 
 export const galleryService = {
-  getGalleryItems: (category?: string) => api.get(`/gallery${category ? `?category=${category}` : ''}`),
-  getAllGalleryItems: () => api.get('/gallery/all'),
+  getGalleryItems: (category?: string, mediaType?: string) =>
+    api.get('/gallery', { params: { ...(category && category !== 'all' ? { category } : {}), ...(mediaType && mediaType !== 'all' ? { mediaType } : {}) } }),
+  getAllGalleryItems: (category?: string, mediaType?: string) =>
+    api.get('/gallery/all', { params: { ...(category && category !== 'all' ? { category } : {}), ...(mediaType && mediaType !== 'all' ? { mediaType } : {}) } }),
   createGalleryItem: (data: any) => api.post('/gallery', data),
+  updateGalleryItem: (id: string, data: any) => api.put(`/gallery/${id}`, data),
+  togglePublish: (id: string) => api.patch(`/gallery/${id}/publish`),
   deleteGalleryItem: (id: string) => api.delete(`/gallery/${id}`),
 };
 
@@ -186,15 +190,27 @@ export const adminService = {
 };
 
 export const mediaService = {
-  getSignature: (folder?: string) => api.get(`/media/signature${folder ? `?folder=${folder}` : ''}`),
+  getSignature: (folder?: string, resourceType?: string) =>
+    api.get(`/media/signature`, { params: { ...(folder ? { folder } : {}), ...(resourceType ? { resourceType } : {}) } }),
   registerMedia: (data: any) => api.post('/media', data),
   getMediaList: (params?: any) => api.get('/media', { params }),
   getMediaUsage: (id: string) => api.get(`/media/${id}/usage`),
   updateMedia: (id: string, data: any) => api.put(`/media/${id}`, data),
   deleteMedia: (id: string, force = false) => api.delete(`/media/${id}${force ? '?forceDelete=true' : ''}`),
-  
-  uploadDirectToCloudinary: async (file: File, sigData: any, onProgress?: (percent: number) => void) => {
-    // If Cloudinary is not configured or in simulation mode
+
+  /**
+   * Upload a file directly to Cloudinary using a backend-generated signed URL.
+   * Supports both images (resourceType='image') and videos (resourceType='video').
+   */
+  uploadDirectToCloudinary: async (
+    file: File,
+    sigData: any,
+    onProgress?: (percent: number) => void,
+    resourceType: 'image' | 'video' = 'image',
+  ) => {
+    const resolvedResourceType = sigData.resourceType || resourceType;
+
+    // Simulation mode (Cloudinary not configured)
     if (!sigData.cloudName || !sigData.apiKey || sigData.isConfigured === false) {
       return new Promise<any>((resolve) => {
         let pct = 0;
@@ -208,8 +224,8 @@ export const mediaService = {
             resolve({
               secure_url: previewUrl,
               public_id: fakePublicId,
-              resource_type: 'image',
-              format: file.name.split('.').pop() || 'jpg',
+              resource_type: resolvedResourceType,
+              format: file.name.split('.').pop() || (resolvedResourceType === 'video' ? 'mp4' : 'jpg'),
               width: 1200,
               height: 800,
               bytes: file.size,
@@ -229,7 +245,9 @@ export const mediaService = {
     formData.append('signature', sigData.signature);
     formData.append('folder', sigData.folder || 'jadu-art');
 
-    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`;
+    // Select the correct Cloudinary endpoint based on resource type
+    const endpoint = resolvedResourceType === 'video' ? 'video' : 'image';
+    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/${endpoint}/upload`;
 
     const res = await axios.post(cloudinaryUrl, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
@@ -244,5 +262,6 @@ export const mediaService = {
     return res.data;
   },
 };
+
 
 export default api;

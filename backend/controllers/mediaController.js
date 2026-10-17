@@ -16,13 +16,14 @@ const { logAudit } = require('../utils/auditLogger');
 exports.getUploadSignature = async (req, res) => {
   try {
     const folder = req.query.folder || process.env.CLOUDINARY_FOLDER || 'jadu-art';
+    const resourceType = req.query.resourceType === 'video' ? 'video' : 'image';
     const isConfigured = !!(
       process.env.CLOUDINARY_CLOUD_NAME &&
       process.env.CLOUDINARY_API_KEY &&
       process.env.CLOUDINARY_API_SECRET
     );
 
-    const sigData = generateSignature(folder);
+    const sigData = generateSignature(folder, resourceType);
     res.json({
       success: true,
       data: {
@@ -64,19 +65,38 @@ exports.createMedia = async (req, res) => {
     }
 
     // Server-side validation check for file type & size
-    const allowedFormats = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
-    if (format && !allowedFormats.includes(format.toLowerCase())) {
-      return res.status(400).json({
-        success: false,
-        message: `File format .${format} is not allowed. Allowed: JPG, JPEG, PNG, WEBP.`,
-      });
-    }
+    const resolvedResourceType = resourceType || 'image';
+    const allowedImageFormats = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+    const allowedVideoFormats = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv'];
 
-    if (bytes && bytes > 5 * 1024 * 1024) {
-      return res.status(400).json({
-        success: false,
-        message: 'File size exceeds maximum limit of 5MB.',
-      });
+    if (resolvedResourceType === 'video') {
+      if (format && !allowedVideoFormats.includes(format.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          message: `Video format .${format} is not allowed. Allowed: MP4, WebM, MOV.`,
+        });
+      }
+      // 200 MB limit for video
+      if (bytes && bytes > 200 * 1024 * 1024) {
+        return res.status(400).json({
+          success: false,
+          message: 'Video file size exceeds maximum limit of 200MB.',
+        });
+      }
+    } else {
+      if (format && !allowedImageFormats.includes(format.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          message: `File format .${format} is not allowed. Allowed: JPG, JPEG, PNG, WEBP.`,
+        });
+      }
+      // 5 MB limit for images
+      if (bytes && bytes > 5 * 1024 * 1024) {
+        return res.status(400).json({
+          success: false,
+          message: 'File size exceeds maximum limit of 5MB.',
+        });
+      }
     }
 
     // Check if media asset already registered
@@ -215,8 +235,14 @@ const findMediaUsageReferences = async (publicId, secureUrl) => {
       references.push({ collection: 'Story', id: s._id, name: `Story: ${s.title}` });
     });
 
-    // 5. Check GalleryItem
-    const galleryItems = await GalleryItem.find({ imageUrl: searchPattern });
+    // 5. Check GalleryItem (search both new mediaUrl and legacy image fields)
+    const galleryItems = await GalleryItem.find({
+      $or: [
+        { mediaUrl: searchPattern },
+        { image: searchPattern },
+        { thumbnailUrl: searchPattern },
+      ],
+    });
     galleryItems.forEach((g) => {
       references.push({ collection: 'GalleryItem', id: g._id, name: `Gallery Item: ${g.title || 'Untitled'}` });
     });

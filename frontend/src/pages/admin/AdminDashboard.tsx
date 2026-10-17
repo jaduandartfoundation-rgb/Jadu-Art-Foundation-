@@ -21,6 +21,7 @@ import {
 } from '../../services/api';
 import ImageUploader from '../../components/ImageUploader';
 import MediaLibraryPage from './MediaLibraryPage';
+import GalleryCMSTab from './GalleryCMSTab';
 import DonationSettingsTab from './DonationSettingsTab';
 import VolunteerManagementTab from './VolunteerManagementTab';
 import DonationAcknowledgementModal from '../../components/donation/DonationAcknowledgementModal';
@@ -2395,8 +2396,11 @@ const AdminDashboard: React.FC = () => {
           {/* TAB: VOLUNTEER MANAGEMENT */}
           {activeTab === 'volunteers' && <VolunteerManagementTab />}
 
+          {/* TAB: GALLERY CMS */}
+          {activeTab === 'cms_gallery' && <GalleryCMSTab />}
+
           {/* Fallback generic table for remaining tabs */}
-          {!['overview', 'donations', 'donation_settings', 'volunteers', 'cms_homepage', 'cms_work', 'settings', 'cms_seo', 'cms_sections', 'cms_legal', 'cms_org_details', 'media'].includes(activeTab) && (
+          {!['overview', 'donations', 'donation_settings', 'volunteers', 'cms_homepage', 'cms_work', 'settings', 'cms_seo', 'cms_sections', 'cms_legal', 'cms_org_details', 'media', 'cms_gallery'].includes(activeTab) && (
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold text-primary-navy uppercase tracking-wider">{activeTab.replace('cms_', '')} Management</h3>
