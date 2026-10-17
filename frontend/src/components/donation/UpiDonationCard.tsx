@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { QrCode, Maximize2, Download, Copy, Check, ShieldAlert, ArrowRight, ShieldCheck, X } from 'lucide-react';
+import { QrCode, Maximize2, Download, Copy, Check, ShieldAlert, ArrowRight, ShieldCheck, X, Loader2 } from 'lucide-react';
 
 interface UpiDonationCardProps {
   upiConfig: {
@@ -64,14 +64,70 @@ const UpiDonationCard: React.FC<UpiDonationCardProps> = ({ upiConfig, qrConfig, 
     }
   };
 
-  const downloadQr = () => {
-    const link = document.createElement('a');
-    link.href = qrImageSrc;
-    link.download = 'jadu-and-art-foundation-official-upi-qr.jpg';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const [downloadingQr, setDownloadingQr] = useState(false);
+
+  const downloadQr = async () => {
+    if (downloadingQr) return;
+    setDownloadingQr(true);
+
+    const filename = 'jadu-and-art-foundation-official-upi-qr.jpg';
+
+    // Helper to trigger direct local download via an invisible link
+    const triggerDownload = (url: string) => {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    try {
+      // Primary Strategy: Fetch image and create a local Blob URL
+      // Browser strictly enforces download attribute for blob: URLs without opening new tab
+      const response = await fetch(qrImageSrc, { mode: 'cors' });
+      if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      triggerDownload(blobUrl);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
+    } catch (err) {
+      console.warn('Direct blob fetch failed, attempting canvas conversion:', err);
+      // Secondary Strategy: Draw to canvas and export base64 data URL
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.naturalWidth || 600;
+              canvas.height = img.naturalHeight || 600;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) throw new Error('Canvas 2D context unavailable');
+              ctx.drawImage(img, 0, 0);
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+              triggerDownload(dataUrl);
+              resolve();
+            } catch (canvasErr) {
+              reject(canvasErr);
+            }
+          };
+          img.onerror = () => reject(new Error('Image failed to load onto canvas'));
+          img.src = qrImageSrc;
+        });
+      } catch (fallbackErr) {
+        console.warn('Canvas conversion failed, applying attachment header fallback:', fallbackErr);
+        // Tertiary Strategy: If Cloudinary URL, use fl_attachment transformation to force attachment disposition
+        let targetUrl = qrImageSrc;
+        if (targetUrl.includes('res.cloudinary.com') && targetUrl.includes('/upload/')) {
+          targetUrl = targetUrl.replace('/upload/', '/upload/fl_attachment:jadu-art-official-qr/');
+        }
+        triggerDownload(targetUrl);
+      }
+    } finally {
+      setDownloadingQr(false);
+    }
   };
 
   return (
@@ -174,10 +230,21 @@ const UpiDonationCard: React.FC<UpiDonationCardProps> = ({ upiConfig, qrConfig, 
               <button
                 type="button"
                 onClick={downloadQr}
-                className="flex-1 py-2 px-3 text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-[#006B3C] border border-emerald-200 rounded-xl flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                disabled={downloadingQr}
+                className="flex-1 py-2 px-3 text-xs font-bold bg-emerald-50 hover:bg-emerald-100 disabled:opacity-60 text-[#006B3C] border border-emerald-200 rounded-xl flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                title="Download official QR code image"
               >
-                <Download size={14} />
-                <span>Download QR</span>
+                {downloadingQr ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={14} />
+                    <span>Download QR</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -316,10 +383,20 @@ const UpiDonationCard: React.FC<UpiDonationCardProps> = ({ upiConfig, qrConfig, 
                 <button
                   type="button"
                   onClick={downloadQr}
-                  className="flex-1 py-3 px-4 rounded-xl text-xs font-black bg-[#006B3C] text-white hover:bg-emerald-800 transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
+                  disabled={downloadingQr}
+                  className="flex-1 py-3 px-4 rounded-xl text-xs font-black bg-[#006B3C] hover:bg-emerald-800 disabled:opacity-60 text-white transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
                 >
-                  <Download size={14} />
-                  <span>Download Image</span>
+                  {downloadingQr ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Downloading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download size={14} />
+                      <span>Download Image</span>
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
