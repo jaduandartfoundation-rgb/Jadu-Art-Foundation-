@@ -66,68 +66,39 @@ const UpiDonationCard: React.FC<UpiDonationCardProps> = ({ upiConfig, qrConfig, 
 
   const [downloadingQr, setDownloadingQr] = useState(false);
 
-  const downloadQr = async () => {
-    if (downloadingQr) return;
+  const downloadQr = () => {
     setDownloadingQr(true);
-
     const filename = 'jadu-and-art-foundation-official-upi-qr.jpg';
 
-    // Helper to trigger direct local download via an invisible link
-    const triggerDownload = (url: string) => {
+    const trigger = (url: string) => {
       const link = document.createElement('a');
       link.href = url;
-      link.download = filename;
+      link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      setTimeout(() => {
+        if (document.body.contains(link)) document.body.removeChild(link);
+        setDownloadingQr(false);
+      }, 600);
     };
 
-    try {
-      // Primary Strategy: Fetch image and create a local Blob URL
-      // Browser strictly enforces download attribute for blob: URLs without opening new tab
-      const response = await fetch(qrImageSrc, { mode: 'cors' });
-      if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      triggerDownload(blobUrl);
-      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
-    } catch (err) {
-      console.warn('Direct blob fetch failed, attempting canvas conversion:', err);
-      // Secondary Strategy: Draw to canvas and export base64 data URL
-      try {
-        await new Promise<void>((resolve, reject) => {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => {
-            try {
-              const canvas = document.createElement('canvas');
-              canvas.width = img.naturalWidth || 600;
-              canvas.height = img.naturalHeight || 600;
-              const ctx = canvas.getContext('2d');
-              if (!ctx) throw new Error('Canvas 2D context unavailable');
-              ctx.drawImage(img, 0, 0);
-              const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-              triggerDownload(dataUrl);
-              resolve();
-            } catch (canvasErr) {
-              reject(canvasErr);
-            }
-          };
-          img.onerror = () => reject(new Error('Image failed to load onto canvas'));
-          img.src = qrImageSrc;
-        });
-      } catch (fallbackErr) {
-        console.warn('Canvas conversion failed, applying attachment header fallback:', fallbackErr);
-        // Tertiary Strategy: If Cloudinary URL, use fl_attachment transformation to force attachment disposition
-        let targetUrl = qrImageSrc;
-        if (targetUrl.includes('res.cloudinary.com') && targetUrl.includes('/upload/')) {
-          targetUrl = targetUrl.replace('/upload/', '/upload/fl_attachment:jadu-art-official-qr/');
-        }
-        triggerDownload(targetUrl);
-      }
-    } finally {
-      setDownloadingQr(false);
+    // 1. Cloudinary URL: use native fl_attachment transformation to deliver direct attachment header
+    if (qrImageSrc.includes('res.cloudinary.com') && qrImageSrc.includes('/upload/')) {
+      const attachUrl = qrImageSrc.includes('fl_attachment')
+        ? qrImageSrc
+        : qrImageSrc.replace('/upload/', '/upload/fl_attachment:jadu-and-art-foundation-official-upi-qr/');
+      trigger(attachUrl);
+      return;
     }
+
+    // 2. Local public file (e.g., /official-pnb-qr.jpg)
+    if (qrImageSrc.startsWith('/') || qrImageSrc.startsWith('./')) {
+      trigger(qrImageSrc);
+      return;
+    }
+
+    // 3. Fallback: backend route that streams with Content-Disposition: attachment
+    trigger('/api/donations/download-qr');
   };
 
   return (

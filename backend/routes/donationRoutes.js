@@ -11,11 +11,12 @@ const {
   getDonationReports, 
   exportDonationsCSV 
 } = require('../controllers/donationController');
-const { getPublicDonationConfig } = require('../controllers/donationSettingsController');
+const { getPublicDonationConfig, downloadQrImage } = require('../controllers/donationSettingsController');
 const { protect } = require('../middleware/auth');
 
 // Public routes
 router.get('/public-config', getPublicDonationConfig);
+router.get('/download-qr', downloadQrImage);
 router.post('/confirm', confirmDirectDonation);
 router.post('/create-order', createOrder);
 router.post('/verify', verifyPayment);

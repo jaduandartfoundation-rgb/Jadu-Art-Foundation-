@@ -331,9 +331,38 @@ const verifyDonationGate = async (req, res) => {
   }
 };
 
+// @route   GET /api/donations/download-qr
+// @desc    Download official UPI QR image as attachment
+const downloadQrImage = async (req, res) => {
+  try {
+    const settings = await getOrCreateSettings();
+    const qrUrl = settings.qrDetails?.qrImageUrl || 'https://res.cloudinary.com/urnn2fkr/image/upload/v1792096134/jadu-art/donations/iyiqks043w9he0q6exse.jpg';
+
+    // 1. If hosted on Cloudinary, redirect to direct attachment download
+    if (qrUrl.includes('res.cloudinary.com') && qrUrl.includes('/upload/')) {
+      const attachUrl = qrUrl.includes('fl_attachment')
+        ? qrUrl
+        : qrUrl.replace('/upload/', '/upload/fl_attachment:jadu-and-art-foundation-official-upi-qr/');
+      return res.redirect(attachUrl);
+    }
+
+    // 2. Fallback fetch and stream with Content-Disposition: attachment
+    const response = await fetch(qrUrl);
+    if (!response.ok) throw new Error('Failed to fetch image source');
+    res.setHeader('Content-Disposition', 'attachment; filename="jadu-and-art-foundation-official-upi-qr.jpg"');
+    res.setHeader('Content-Type', response.headers.get('content-type') || 'image/jpeg');
+    const arrayBuffer = await response.arrayBuffer();
+    return res.send(Buffer.from(arrayBuffer));
+  } catch (error) {
+    console.error('downloadQrImage error:', error);
+    return res.redirect('/official-pnb-qr.jpg');
+  }
+};
+
 module.exports = {
   getPublicDonationConfig,
   getAdminDonationSettings,
   updateDonationSettings,
-  verifyDonationGate
+  verifyDonationGate,
+  downloadQrImage
 };
