@@ -127,8 +127,8 @@ const seedData = async () => {
         heroImage: 'https://images.pexels.com/photos/14260022/pexels-photo-14260022.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
         heroCtaText: 'DONATE NOW',
         heroCtaLink: '/donate',
-        secondaryCtaText: 'OUR WORK',
-        secondaryCtaLink: '/our-work',
+        secondaryCtaText: 'JOIN US',
+        secondaryCtaLink: '/volunteer',
 
         // Founder's Message & Official Content
         founderName: 'Founder',

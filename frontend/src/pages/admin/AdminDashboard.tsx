@@ -1213,6 +1213,40 @@ const AdminDashboard: React.FC = () => {
                       className="w-full p-3 border border-gray-300 rounded-xl"
                     ></textarea>
                   </div>
+
+                  {/* Hero Action Buttons (CTAs) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                    <div>
+                      <label className="block font-bold text-gray-700 mb-1">Primary Button Text (Donate)</label>
+                      <input
+                        type="text"
+                        value={cmsData.heroCtaText || ''}
+                        onChange={(e) => setCmsData({ ...cmsData, heroCtaText: e.target.value })}
+                        placeholder="DONATE NOW"
+                        className="w-full p-3 border border-gray-300 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-gray-700 mb-1">Secondary Button Text (Volunteer)</label>
+                      <input
+                        type="text"
+                        value={cmsData.secondaryCtaText || ''}
+                        onChange={(e) => setCmsData({ ...cmsData, secondaryCtaText: e.target.value })}
+                        placeholder="JOIN US"
+                        className="w-full p-3 border border-gray-300 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-gray-700 mb-1">Secondary Button Link (URL)</label>
+                      <input
+                        type="text"
+                        value={cmsData.secondaryCtaLink || ''}
+                        onChange={(e) => setCmsData({ ...cmsData, secondaryCtaLink: e.target.value })}
+                        placeholder="/volunteer"
+                        className="w-full p-3 border border-gray-300 rounded-xl"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* 2. Founder's Message Section */}

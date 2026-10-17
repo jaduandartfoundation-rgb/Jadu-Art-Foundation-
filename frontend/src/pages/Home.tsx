@@ -69,7 +69,8 @@ const Home: React.FC = () => {
       heroDescription: 'Jadu & Art Foundation works towards the welfare of people, communities and animals through education, healthcare, cow welfare and humanitarian support.',
       heroImage: 'https://images.pexels.com/photos/14260022/pexels-photo-14260022.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
       heroCtaText: 'DONATE NOW',
-      secondaryCtaText: 'OUR WORK',
+      secondaryCtaText: 'JOIN US',
+      secondaryCtaLink: '/volunteer',
       
       // Founder content
       founderName: 'Founder',
@@ -276,11 +277,12 @@ const Home: React.FC = () => {
                 </Link>
 
                 <Link
-                  to="/our-work"
-                  className="bg-brand-cream text-brand-dark border border-brand-green/30 px-8 py-4 rounded-2xl font-bold text-base hover:bg-brand-green/10 transition-all flex items-center space-x-2"
+                  to={(cms.secondaryCtaLink && cms.secondaryCtaLink !== '/our-work') ? cms.secondaryCtaLink : "/volunteer"}
+                  className="bg-brand-cream text-brand-dark border border-brand-green/30 px-8 py-4 rounded-2xl font-bold text-base hover:bg-brand-green/10 transition-all flex items-center space-x-2.5 group"
                 >
-                  <span>{cms.secondaryCtaText || "OUR WORK"}</span>
-                  <ArrowRight className="w-4 h-4 text-brand-green" />
+                  <Users className="w-5 h-5 text-brand-green group-hover:scale-110 transition-transform" />
+                  <span>{(cms.secondaryCtaText && cms.secondaryCtaText !== "OUR WORK") ? cms.secondaryCtaText : "JOIN US"}</span>
+                  <ArrowRight className="w-4 h-4 text-brand-green group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
 
